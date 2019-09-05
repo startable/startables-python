@@ -29,7 +29,7 @@ setup(
     description='Reads, writes, and manipulates data stored in StarTable format',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/startable',
+    url='https://github.com/startable/startables-python/',
     author='Jean-François Corbett',
     author_email='jeaco@orsted.dk',
     license='BSD-3-Clause',
