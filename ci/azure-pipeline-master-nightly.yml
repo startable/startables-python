@@ -1,0 +1,38 @@
+variables:
+  conda_env: "../startables_dev"
+
+resources:
+  - repo: self
+    clean: true
+
+jobs:
+  - job: Phase_1
+    displayName: Install dependencies, build, test
+    condition: succeeded()
+    steps:
+      - script: "conda remove --prefix $(conda_env) --all"
+        displayName: "Remove any pre-existing conda environment"
+
+      - script: "conda create --prefix $(conda_env)"
+        displayName: "Create conda environment"
+
+      - script: "call activate $(conda_env) && conda-env update --prefix $(conda_env) --file environment.yml"
+        displayName: "Install dependencies"
+
+      - script: "call activate $(conda_env) && conda list"
+        displayName: Dump conda environment
+        continueOnError: true
+
+      - script: "call activate $(conda_env) && flake8 --ignore E501"  # E501 line too long
+        displayName: Flake8
+        continueOnError: true
+
+      - script: "call activate $(conda_env) && SET && python -m pytest --cov --junitxml=junit/test-results.xml -s"
+        displayName: pytest
+
+      - task: PublishTestResults@2
+        displayName: "Publish Test Results **/test-results.xml"
+        inputs:
+          testResultsFiles: "**/test-results.xml"
+          testRunTitle: Pytest
+

@@ -1,0 +1,33 @@
+Author:;xCFJE;
+;;;
+***RevisionHistory;;;
+Date;Revision;Author;Description
+28-02-2019;A;XCFJE;Illustrative example
+;;;
+Comment this n that;;;
+;;;
+**weirdo_farm_animals;;
+your_farm my_farm farms_galore missing a separator;
+species;n_legs;avg_weight;
+text;-;kg;
+Pheasant a la Pripyat;3;9;
+pigboy;4;{{(* age 15)}};
+the wise goat;4;-;
+underlige ugle;2;5;
+2 headed cow;4;200;
+goose/shark hybrid in the neighbours pond;2;300;
+;;;
+::weirdo_farm_animals;Lists some properties of unusual farm animals emerged since the incident;;
+:n_legs;Typical number of legs for this species;;
+:avg_weight;Average weight of adult individuals of this species;;
+;;;
+;;;
+**cereals;
+all;
+kind;is_yummy;;
+text;onoff;;
+oatmeal;0;;
+captncrunch;1;;
+all bran;1;;
+chocolate chip granola;1;;
+fruit;0;;

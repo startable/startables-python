@@ -1,0 +1,143 @@
+skinparam {
+
+	shadowing false
+	RoundCorner 20
+	MaxMessageSize 200
+	BoxPadding 10
+	ParticipantPadding 10
+
+	Component {
+		ArrowColor black
+		ArrowFontSize 12
+	}
+
+	Rectangle {
+		BorderThickness 1.25
+		RoundCorner 10
+		BorderColor black
+		Backgroundcolor white
+	}
+
+	Cloud {
+		BorderThickness 1.25
+		BorderColor black
+		Backgroundcolor white
+	}
+
+	Database {
+		BorderColor black
+		Backgroundcolor white
+	}
+
+	Frame {
+		BorderColor lightgrey
+		BorderThickness 1
+		FontColor grey
+		FontStyle normal
+		FontSize 12
+	}
+
+	SequenceBox {
+		BackgroundColor white
+		BorderColor lightgrey
+		BorderThickness 1
+		FontColor grey
+		FontStyle normal
+		FontSize 12
+	}
+
+	Package {
+		BorderColor lightgrey
+		BorderThickness 1
+		FontColor grey
+		FontStyle normal
+		FontSize 12
+	}
+
+	Legend {
+		BackgroundColor White
+	}
+
+	Actor {
+		BorderColor black
+		BackgroundColor white
+	}
+
+	SequenceLifeLine {
+		BorderColor grey
+	}
+
+	SequenceDivider {
+		BackgroundColor white
+		BorderThickness 20
+		BorderColor white
+		FontStyle Normal
+	}
+
+	SequenceGroup {
+		BorderColor lightgrey
+		BorderThickness 1
+		HeaderFontStyle Normal
+		FontStyle Normal
+	}
+
+	Participant {
+		BorderThickness 1.25
+		BorderColor black
+		Backgroundcolor white
+	}
+
+	File {
+		BorderColor black
+		BackgroundColor white
+		BorderThickness 1
+	}
+
+	Class {
+		BorderColor black
+		BackgroundColor white
+		BorderThickness 1
+	}
+
+	Note {
+		BackgroundColor #lightyellow
+		BorderColor grey
+		BorderThickness 1
+		FontSize 12
+	}
+
+	Usecase {
+		BorderThickness 1.25
+		RoundCorner 10
+		BorderColor black
+		Backgroundcolor white
+	}
+
+	Node {
+		BackgroundColor white
+		BorderColor lightgrey
+		BorderThickness 1
+		FontColor black
+		FontStyle normal
+	}
+
+	State {
+		BorderColor black
+		Backgroundcolor white
+		AttributeFontSize 12
+		FontStyle bold
+	}
+
+	Activity {
+		BorderThickness 1.25
+		BorderColor black
+		Backgroundcolor white
+	}
+
+	ActivityDiamond {
+		BorderThickness 1.25
+		BorderColor black
+		Backgroundcolor white
+	}
+
+}

@@ -1,0 +1,33 @@
+{% set data = load_setup_py_data() %}
+
+package:
+  name: startables
+  version: {{ data.get('version') }}
+
+source:
+  path: ..
+
+requirements:
+  build:
+    - python>=3.6
+    - setuptools
+    - openpyxl
+    - pandas
+    - numpy
+  run:
+    - python>=3.6
+    - numpy
+    - pandas
+    - openpyxl
+
+test:
+  requires:
+    - pytest
+  imports:
+    - startables
+
+about:
+  summary: {{ data.get('description') }}
+  home: {{ data.get('url') }}
+  license: {{ data.get('license') }}
+  #license_family: MIT

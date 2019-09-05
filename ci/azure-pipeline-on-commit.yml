@@ -1,0 +1,40 @@
+variables:
+  conda_env: "startables_dev"
+
+trigger:
+  batch: false  # batch changes if true, start a new build for every push if false
+  branches:
+    include:
+      - '*'
+
+resources:
+  - repo: self
+    clean: true
+
+jobs:
+  - job: Phase_1
+    displayName: Build and Test
+    condition: succeeded()
+    steps:
+      - task: CondaEnvironment@1
+        displayName: "Conda environment $(conda_env)"
+        inputs:
+          createCustomEnvironment: true
+          environmentName: $(conda_env)
+          cleanEnvironment: false
+
+      - script: "call activate $(conda_env) & conda env update --file environment.yml"
+        displayName: "Install dependencies"
+
+      - script: "call activate $(conda_env) && flake8 --ignore E501"  # E501 line too long
+        displayName: Flake8
+        continueOnError: true
+
+      - script: "call activate $(conda_env) && SET && python -m pytest --cov --junitxml=junit/test-results.xml -s"
+        displayName: pytest
+
+      - task: PublishTestResults@2
+        displayName: "Publish Test Results **/test-results.xml"
+        inputs:
+          testResultsFiles: "**/test-results.xml"
+          testRunTitle: Pytest

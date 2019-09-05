@@ -1,0 +1,55 @@
+@startuml
+
+!include styles.puml
+
+title  CustomUnitPolicy unit conversion graph
+
+rectangle source_units as "==Source units" #whitesmoke {
+
+    rectangle explicit as "==User-defined" #beige {
+      file km as "km"
+      file mm as "mm"
+      file furlong as "furlong"
+      file C as "°C"
+      file F as "F"
+      file rankin as "rankin"
+      rectangle aliases as "==Aliases" #beige {
+        file metre as "'metre'"
+        file deg_C as "'deg_C'"
+        file degree_C as "'degree C'"
+      }
+    }
+    rectangle implicit as "==Implicitly defined \n (Trivial case)" #lightgrey {
+      file m as "m"
+      file K as "K"
+    }
+
+
+}
+
+rectangle ref_units as "==Reference units" #whitesmoke {
+    file mref as "m"
+    file Kref as "K"
+}
+
+note top of source_units
+Can convert between
+any two source units having
+the same reference unit
+end note
+
+km <--> mref
+mm <--> mref
+furlong <--> mref
+m ..> mref
+
+C <--> Kref
+F <--> Kref
+rankin <--> Kref
+K ..> Kref
+
+metre --> mref
+degree_C --> Kref
+deg_C --> Kref
+
+@enduml

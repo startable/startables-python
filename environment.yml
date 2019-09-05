@@ -1,0 +1,21 @@
+name: startables_dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.6  # Keep this =version same as conda recipe meta.yaml's >=version
+  - numpy
+  - pandas
+  - xlrd  # to support pandas.read_excel()
+  - openpyxl
+  - pypandoc
+  - pyyaml
+  - appdirs
+  # TEST
+  - pytest
+  - coverage
+  - pytest-cov
+  # DEV
+  - black
+  - flake8
+  - flake8-comprehensions

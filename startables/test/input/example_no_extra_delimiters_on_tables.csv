@@ -1,0 +1,40 @@
+**farm_animals
+your_farm my_farm farms_galore;;
+species;n_legs;avg_weight
+text;-;kg
+chicken;2;3
+pig;4;{{(* age 30)}}
+goat;4;-
+cow;NaN;200
+goose;2;9
+1234;-;-
+;;
+::farm_animals;Lists some properties of typical farm animals;;
+:n_legs;Typical number of legs for this species;;
+:avg_weight;Average weight of adult individuals of this species;;
+;;;
+;;;
+**fruit;
+all;
+kind;is_yummy
+text;onoff
+apple;0
+raspberry;1
+strawberry;1
+pineapple;0
+;
+;
+**taxidermy;;;
+all;;;
+name;species;needs_repair;time_of_death
+text;text;onoff;datetime
+Sam;crow;1;28-04-2012 12:34
+Guy;mouse;0;-
+Kurt;ferret;0;30-04-2012 12:34
+Louise;rabbit;0;01-05-2012 12:34
+;;;
+;;;
+**empty_table;;;
+all;;;
+foo;bar;;
+text;-;;
