@@ -14,6 +14,14 @@ For issues relating to the StarTable standard more broadly, please consult the [
 
 Contributions are welcome, especially if they relate to an issue that you have previously discussed or posted in the issue tracker.  
 
+## Installation
+
+Available on PyPI:
+
+```
+pip install startables
+```
+
 ## Example usage
 
 ```python
@@ -29,8 +37,7 @@ table_x = st.Table(df=df, name='some_table', col_specs=col_specs, destinations={
 print(table_x.df['b'])
 
 # Read bundle of tables from file
-with open(str('animal_farm_startable_file.csv')) as f:
-    b = st.read_csv(f)
+b = st.read_csv('animal_farm_startable_file.csv')
 
 # Make new bundle containing a subset of this bundle's tables by name and/ or destination
 farm_bundle = b.filter(name_pattern='farm')  
