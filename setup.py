@@ -10,6 +10,7 @@ https://github.com/pypa/sampleproject
 
 from setuptools import setup, find_packages
 from os import path
+import re
 
 here = path.abspath(path.dirname(__file__))
 
@@ -17,14 +18,22 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-# Get the version number from version.py
-version = {}
-with open(path.join(here, 'version.py')) as fp:
-    exec(fp.read(), version)
+
+def find_version(*file_paths):
+    """
+    Reads version from a file. Version must be specified explicitly in the file as:
+    __version__ = "<the version number string>"
+    """
+    version_file = open(path.join(*file_paths), "r").read()
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
 
 setup(
     name='startables',
-    version=version['__version__'],
+    version=find_version("startables", "__init__.py"),
     description='Reads, writes, and manipulates data stored in StarTable format',
     long_description=long_description,
     long_description_content_type='text/markdown',
