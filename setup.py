@@ -28,12 +28,10 @@ setup(
     version=version['__version__'],
     description='Reads, writes, and manipulates data stored in StarTable format',
     long_description=long_description,
-    long_description_content_type="text/markdown",
+    long_description_content_type='text/markdown',
     url='https://github.com/startable',
-
     author='Jean-François Corbett',
     author_email='jeaco@orsted.dk',
-
     license='BSD-3-Clause',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
