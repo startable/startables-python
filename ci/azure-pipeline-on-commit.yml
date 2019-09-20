@@ -15,7 +15,6 @@ jobs:
   - job: Phase_1
     displayName: Build and Test
     condition: succeeded()
-    pool: $(POOL_NAME)
     steps:
       - task: CondaEnvironment@1
         displayName: "Conda environment $(conda_env)"
