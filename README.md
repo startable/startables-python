@@ -133,6 +133,13 @@ This project was migrated to GitHub from a private server at v0.8.0. Changes pri
 
 This project follows [semantic versioning](https://semver.org/). This changelog follows the guidelines published on [keepachangelog.com](https://keepachangelog.com/en/1.0.0/).
 
+### Unreleased
+
+#### Added
+
+* `read_bulk()` convenience function to read multiple StarTable files at once into a single `Bundle`. 
+* `import_from_word()` utility function to parse table blocks from tables in Microsoft Word `*.docx` files. 
+
 ### 0.8.0 - 2019-09-03
 
 #### Changed
