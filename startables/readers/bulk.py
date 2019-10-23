@@ -1,17 +1,17 @@
 import glob
 import os
 from pathlib import Path
-from typing import Union, Iterable
+from typing import Union, Iterable, List
 
 from startables import Bundle, read_csv, read_excel
 
 
-def read_bulk(paths: Union[str, Path, Iterable[Union[str, Path]]]) -> Bundle:
+def read_bulk(path_specs: Union[str, Path, Iterable[Union[str, Path]]]) -> Bundle:
     """Reads all files from supplied paths and returns a single Bundle containing all table blocks read from all files.
        Supported extensions are: [csv, xlsx] (soon docx?)
 
     Arguments:
-        paths {[type]} -- Can be a file, a folder or a glob expression that contains Startables files with supported extensions. Can also be an Iterable of files, folders, and glob expressions.
+        path_specs {[type]} -- Can be a file, a folder or a glob expression that contains StarTable files with supported extensions. Can also be an Iterable of files, folders, and glob expressions.
 
     Returns:
         Bundle -- [description]
@@ -23,33 +23,12 @@ def read_bulk(paths: Union[str, Path, Iterable[Union[str, Path]]]) -> Bundle:
     reading a folder or glob expression.
     """
 
-    if isinstance(paths, str) or isinstance(paths, Path):
+    if isinstance(path_specs, str) or isinstance(path_specs, Path):
         # Pack single path in something that's iterable, for later convenience
-        paths = [paths]
-
-    def is_temp_garbage(filename: str):
-        """Is this a Microsoft Office temp file?"""
-        return filename.startswith("~$") or filename.endswith(".tmp")
+        path_specs = [path_specs]
 
     # First collect the files
-    bulk_files = list()
-    for path in paths:
-        path = str(path)
-        if os.path.isfile(path):
-            # single file
-            bulk_files.append(path)
-        elif os.path.isdir(path):
-            # folder
-            for fn in os.listdir(path):
-                if not is_temp_garbage(fn):
-                    bulk_files.append(os.path.join(path, fn))
-        elif "*" in path:
-            # glob expression
-            for fn in glob.glob(path):
-                if not is_temp_garbage(fn):
-                    bulk_files.append(os.path.join(path, fn))
-        else:
-            raise FileNotFoundError(path)
+    bulk_files = collect_bulk_file_paths(path_specs)
 
     # Now read all files into a single bundle
     collected_bundle = Bundle(tables=[])
@@ -74,3 +53,36 @@ def read_bulk(paths: Union[str, Path, Iterable[Union[str, Path]]]) -> Bundle:
             collected_bundle = Bundle(collected_bundle.tables + this_bundle.tables)
 
     return collected_bundle
+
+
+def collect_bulk_file_paths(path_specs: Union[str, Path, Iterable[Union[str, Path]]]) -> List[str]:
+    """
+    Expand the path specs into a list of individual file paths.
+    :param path_specs: Can be a file, a folder or a glob expression that contains StarTable files with supported extensions. Can also be an Iterable of files, folders, and glob expressions.
+    :return: List of individual file paths covered by path_specs.
+    """
+    bulk_files = list()
+    for path in path_specs:
+        path = str(path)
+        if os.path.isfile(path):
+            # single file
+            bulk_files.append(path)
+        elif os.path.isdir(path):
+            # folder
+            for fn in os.listdir(path):
+                if not _is_temp_garbage(fn):
+                    bulk_files.append(os.path.join(path, fn))
+        elif "*" in path:
+            # glob expression
+            for fn in glob.glob(path):
+                if not _is_temp_garbage(fn):
+                    bulk_files.append(os.path.join(path, fn))
+        else:
+            raise FileNotFoundError(path)
+    return bulk_files
+
+
+def _is_temp_garbage(filename: str):
+    """Is this a Microsoft Office temp file?"""
+    return filename.startswith("~$") or filename.endswith(".tmp")
+
