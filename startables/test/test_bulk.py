@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from startables.readers.bulk import read_bulk
+from startables import read_bulk
 
 
 @pytest.fixture(scope='module')
