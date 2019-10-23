@@ -50,8 +50,6 @@ def _read_bulk_files_to_bundle(bulk_files: List[str]) -> Bundle:
         if ext in (".csv",):
             with open(path) as csv:
                 this_bundle = read_csv(csv)
-        # elif ext in (".docx",):
-        #     bundle = read_word(filename)
         elif ext in (".xlsx",):
             this_bundle = read_excel(path)
         else:
