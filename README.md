@@ -135,6 +135,8 @@ This project follows [semantic versioning](https://semver.org/). This changelog 
 
 ### Unreleased
 
+The following items are planned to be...
+
 #### Added
 
 * `read_bulk()` convenience function to read multiple StarTable files at once into a single `Bundle`. 
