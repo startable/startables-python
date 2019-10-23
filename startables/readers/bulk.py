@@ -27,10 +27,19 @@ def read_bulk(path_specs: Union[str, Path, Iterable[Union[str, Path]]]) -> Bundl
         # Pack single path in something that's iterable, for later convenience
         path_specs = [path_specs]
 
-    # First collect the files
-    bulk_files = collect_bulk_file_paths(path_specs)
+    # First expand the path specs and collect the files they cover
+    bulk_files = _collect_bulk_file_paths(path_specs)
 
-    # Now read all files into a single bundle
+    # Now read all the collected files into a single bundle
+    collected_bundle = _read_bulk_files_to_bundle(bulk_files)
+
+    return collected_bundle
+
+
+def _read_bulk_files_to_bundle(bulk_files: List[str]) -> Bundle:
+    """
+    Read list of individual file paths into a single Bundle.
+    """
     collected_bundle = Bundle(tables=[])
     for path in bulk_files:
 
@@ -51,11 +60,10 @@ def read_bulk(path_specs: Union[str, Path, Iterable[Union[str, Path]]]) -> Bundl
         # read something?
         if this_bundle:
             collected_bundle = Bundle(collected_bundle.tables + this_bundle.tables)
-
     return collected_bundle
 
 
-def collect_bulk_file_paths(path_specs: Union[str, Path, Iterable[Union[str, Path]]]) -> List[str]:
+def _collect_bulk_file_paths(path_specs: Union[str, Path, Iterable[Union[str, Path]]]) -> List[str]:
     """
     Expand the path specs into a list of individual file paths.
     :param path_specs: Can be a file, a folder or a glob expression that contains StarTable files with supported extensions. Can also be an Iterable of files, folders, and glob expressions.
