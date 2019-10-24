@@ -12,6 +12,7 @@ try:
 except ImportError:
     # openpyxl < 2.6
     from openpyxl.worksheet import Worksheet
+from openpyxl import load_workbook
 
 from pyscheme import make_root_environment, Environment
 from startables import ColumnMetadata
@@ -441,3 +442,67 @@ class TestBundle:
 
     def test_to_excel(self, some_bundle: Bundle, tmpdir):
         some_bundle.to_excel(tmpdir.join('some_bundle.xlsx'))
+
+    def test_to_csv_with_header(self, some_bundle: Bundle):
+        out = io.StringIO()
+        some_bundle.to_csv(out, header='Info table\nWith:; farm animals, Fruit, etc.\t', sep=';')
+        assert out.getvalue() == dedent("""\
+            Info table
+            With:; farm animals, Fruit, etc.
+            
+            **farm_animals;;;
+            your_farm my_farm farms_galore
+            species;n_legs;avg_weight
+            text;-;kg
+            chicken;2.0;3
+            pig;4.0;{{(* age 30)}}
+            goat;4.0;-
+            cow;-;200
+            goose;2.0;9
+            1234;-;-
+
+            **fruit;;;
+            all
+            kind;is_yummy
+            text;onoff
+            apple;0
+            raspberry;1
+            strawberry;1
+            pineapple;0
+
+            **taxidermy;;;
+            all
+            name;species;needs_repair;time_of_death
+            text;text;onoff;datetime
+            Sam;crow;1;2012-04-28 12:34:00
+            Guy;mouse;0;-
+            Kurt;ferret;0;2012-04-30 12:34:00
+            Louise;rabbit;0;2012-05-01 12:34:00
+
+            **empty_table;;;
+            all
+            foo;bar
+            text;-
+
+            """)
+
+    def test_to_excel_with_header(self, some_bundle: Bundle, tmpdir):
+
+        header = ' Test Header\nDate:; Today\nNumeric Value:; 0.123\n'
+        header_sep = ';'
+
+        # write the bundle to excel
+        some_bundle.to_excel(tmpdir.join('some_bundle.xlsx'), header=header, header_sep=header_sep)
+
+        # now read in the excel table
+        wb = load_workbook(filename=tmpdir.join('some_bundle.xlsx'), read_only=True)
+        ws = wb.active
+        # compare line/rows and their contents
+        for line, row in zip(header.split('\n'), ws.rows):
+            if line == '':
+                for cell in row:
+                    assert(cell.value == None)
+            else:
+                for col, cell in zip(line.split(header_sep), row):
+                    assert (col == cell.value)
+

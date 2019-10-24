@@ -492,18 +492,29 @@ class Bundle:
                 new_table.origin = old_table.origin
             return Bundle(tables, self.origin)
 
-    def to_csv(self, stream: TextIO, sep: str = ';') -> None:
+    def to_csv(self, stream: TextIO, sep: str = ';', header: str = '') -> None:
         """
         :param stream:
         :param sep: column separator (i.e. delimiter) character
+        :param header: text to be printed at the beginning of the csv file. If formatted as csv, will span columns and rows.
         """
         max_num_cols = max(len(t.col_names) for t in self._tables)
+        if header:
+            stream.write(header.rstrip())
+            stream.write('\n\n')
+
         for t in self._tables:
             t.to_csv(stream, sep=sep, num_cols=max_num_cols)
 
-    def to_excel(self, path) -> None:
+    def to_excel(self, path, header: str = '', header_sep: str = ';') -> None:
         wb = openpyxl.Workbook()
         ws = wb.active
+
+        if header:
+            for row in header.rstrip().split('\n'):
+                ws.append(row.split(header_sep))
+            ws.append([])
+
         for t in self._tables:
             t.to_excel(ws)
             ws.append([])  # blank line after table block
