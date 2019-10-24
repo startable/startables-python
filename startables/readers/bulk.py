@@ -1,14 +1,14 @@
 import glob
 import os
 from pathlib import Path
-from typing import Union, Iterable, List
+from typing import Union, Iterable, List, Set
 
 from startables import Bundle, read_csv, read_excel
 
 
 def read_bulk(path_specs: Union[str, Path, Iterable[Union[str, Path]]]) -> Bundle:
     """Reads all files from supplied paths and returns a single Bundle containing all table blocks read from all files.
-       Supported extensions are: [csv, xlsx] (soon docx?)
+       Supported extensions are: [csv, xlsx]
 
     Arguments:
         path_specs {[type]} -- Can be a file, a folder or a glob expression that contains StarTable files with supported extensions. Can also be an Iterable of files, folders, and glob expressions.
@@ -36,9 +36,9 @@ def read_bulk(path_specs: Union[str, Path, Iterable[Union[str, Path]]]) -> Bundl
     return collected_bundle
 
 
-def _read_bulk_files_to_bundle(bulk_files: List[str]) -> Bundle:
+def _read_bulk_files_to_bundle(bulk_files: Iterable[str]) -> Bundle:
     """
-    Read list of individual file paths into a single Bundle.
+    Read multiple individual file paths into a single Bundle.
     """
     collected_bundle = Bundle(tables=[])
     for path in bulk_files:
@@ -61,28 +61,28 @@ def _read_bulk_files_to_bundle(bulk_files: List[str]) -> Bundle:
     return collected_bundle
 
 
-def _collect_bulk_file_paths(path_specs: Union[str, Path, Iterable[Union[str, Path]]]) -> List[str]:
+def _collect_bulk_file_paths(path_specs: Union[str, Path, Iterable[Union[str, Path]]]) -> Set[str]:
     """
     Expand the path specs into a list of individual file paths.
     :param path_specs: Can be a file, a folder or a glob expression that contains StarTable files with supported extensions. Can also be an Iterable of files, folders, and glob expressions.
-    :return: List of individual file paths covered by path_specs.
+    :return: Set of individual file paths covered by path_specs.
     """
-    bulk_files = list()
+    bulk_files = set()
     for path in path_specs:
         path = str(path)
         if os.path.isfile(path):
             # single file
-            bulk_files.append(path)
+            bulk_files.add(path)
         elif os.path.isdir(path):
             # folder
             for fn in os.listdir(path):
                 if not _is_temp_garbage(fn):
-                    bulk_files.append(os.path.join(path, fn))
+                    bulk_files.add(os.path.join(path, fn))
         elif "*" in path:
             # glob expression
             for fn in glob.glob(path):
                 if not _is_temp_garbage(fn):
-                    bulk_files.append(os.path.join(path, fn))
+                    bulk_files.add(os.path.join(path, fn))
         else:
             raise FileNotFoundError(path)
     return bulk_files

@@ -32,7 +32,7 @@ def test_read_bulk_glob(bulk_dir):
     assert len(bundle.filter(name_pattern='BazBass').tables) == 2
 
 
-def test_read_bulk_files(bulk_dir):
+def test_read_bulk_list_of_files(bulk_dir):
     bundle = read_bulk([bulk_dir / 'simple_bar.csv', bulk_dir / 'simple_baz_with2sheets.xlsx'])
     assert bundle  # is not None
     assert len(bundle.tables) == 3
