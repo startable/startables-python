@@ -9,9 +9,19 @@ from startables import Bundle, read_csv, read_excel
 def read_bulk(path_specs: Union[str, Path, Iterable[Union[str, Path]]],
               readers: Dict[str, Optional[Callable]] = None) -> Bundle:
     """
-    Reads all files with supported extensions from supplied paths and returns a single Bundle
-    containing all table blocks read from all files.
-    Default supported extensions are: ['csv', 'xlsx']. More can be added via the 'readers' argument.
+    Reads all files with supported extensions from supplied path specs and returns a single Bundle
+    containing all table blocks read from all files. Any given file's extension determines which
+    reader is used to read that file.
+
+    Path specs can be any mix of one or more files, directories, and/or glob expressions.
+
+    Default supported extensions and corresponding readers are:
+        {'xlsx': startables.read_excel,
+         'csv' : startables.read_csv}.
+    Use the 'readers' argument to:
+        * add more readers for other extensions;
+        * remove the default readers to prevent the default extensions from being read; and/or
+        * replace the default readers for the default extensions.
 
     Multiple tables with the same name (within or across files) are preserved as such in the output
     bundle.
@@ -24,7 +34,8 @@ def read_bulk(path_specs: Union[str, Path, Iterable[Union[str, Path]]],
      read files with extensions beyond the default ext.
      reader_func must be a callable that takes a single path argument and returns a Bundle.
      Default: {'xlsx': startables.read_excel, 'csv': startables.read_csv}.
-     To prevent the default files extensions from being read, specify e.g. {'xlsx': None, ...}
+     To prevent the default files extensions from being read, specify its reader to be None,
+     e.g. {'xlsx': None, ...}
     :return: Bundle containing the tables read from all files.
     """
 
@@ -70,7 +81,6 @@ def _read_bulk_files_to_bundle(bulk_files: Iterable[str],
 def _collect_bulk_file_paths(path_specs: Union[str, Path, Iterable[Union[str, Path]]]) -> Set[str]:
     """
     Expand the path specs into a list of individual file paths.
-    :param path_specs: Can be a file, a folder or a glob expression that contains StarTable files with supported extensions. Can also be an Iterable of files, folders, and glob expressions.
     :return: Set of individual file paths covered by path_specs.
     """
     bulk_files = set()
