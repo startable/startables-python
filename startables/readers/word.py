@@ -27,8 +27,8 @@ def import_from_word(path: Union[str, Path]) -> Bundle:
     try:
         import docx
     except ImportError:
-        raise ImportError("Missing optional dependency 'docx'. Install docx package "
-                          "for MS Word support. Use pip or conda to install docx.") from None
+        raise ImportError("Missing optional dependency 'docx'. Install python-docx package "
+                          "for MS Word support. Use pip or conda to install python-docx.") from None
 
     if not os.path.exists(str(path)):
         raise IOError(f'File not found: {path}')
