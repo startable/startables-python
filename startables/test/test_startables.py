@@ -36,8 +36,26 @@ class TestTable:
         return {n: ColumnMetadata(Unit(u)) for n, u in zip(['a', 'b', 'c'], ['-', 'text', 'm'])}
 
     @fixture
+    def some_df_with_digits(self):
+        return pd.DataFrame(data=[[nan, 'gnu', 3.23412121],
+                                  [4.12, 'gnat', 0.023],
+                                  [0.4, 'galah', 42.01],
+                                  [0.04334, 'gentoo', 43232],
+                                  [40.04334, 'gerbil', 43232.0987]],
+                            columns=['a', 'b', 'c'])
+
+    @fixture
+    def col_display_digits(self):
+        return {n: u for n, u in zip(['a', 'c'], [1, 2])}
+
+    @fixture
     def some_table(self, some_df, col_specs):
         return Table(df=some_df, name='some_table', col_specs=col_specs, destinations=['success', 'glory'])
+
+    @fixture
+    def some_table_with_digits(self, some_df_with_digits, col_specs, col_display_digits):
+        return Table(df=some_df_with_digits, name='some_table_with_digits', col_specs=col_specs, destinations=['success', 'glory'],
+                     col_display_digits=col_display_digits)
 
     def test_init_with_col_specs(self, some_df, col_specs):
         t = Table(df=some_df, name='adequate_table', col_specs=col_specs)
@@ -100,6 +118,23 @@ class TestTable:
             
             """)
 
+    def test_to_csv_with_digits(self, some_table_with_digits: Table):
+        out = io.StringIO()
+        some_table_with_digits.to_csv(out)
+        print(out.getvalue())
+        assert out.getvalue() == dedent("""\
+            **some_table_with_digits;;
+            success glory
+            a;b;c
+            -;text;m
+            -;gnu;3.23
+            4.1;gnat;0.02
+            0.4;galah;42.01
+            0.0;gentoo;43232.0
+            40.0;gerbil;43232.1
+            
+            """)
+
     def test_to_csv_nonstring_colnames_and_destinations(self):
         # PS-53 Bundle.to_csv() fails when column names are not strings
         nonstring_colnames = [1.234, 666.0, 42.0]
@@ -130,6 +165,25 @@ class TestTable:
         assert ws.cell(4, 3).value == 'm'
         assert ws.cell(5, 1).value == '-'
         assert ws.cell(6, 3).value == '{{(+ x y)}}'
+
+    def test_to_excel_with_digits(self, some_table_with_digits: Table):
+        wb = openpyxl.Workbook()
+        ws: Worksheet = wb.active
+        some_table_with_digits.to_excel(ws)
+        assert ws.cell(row=1, column=1).value == f'**{some_table_with_digits.name}'
+        assert ws.cell(2, 1).value == f'{" ".join(some_table_with_digits.destinations)}'
+        assert ws.cell(3, 2).value == 'b'
+        assert ws.cell(4, 3).value == 'm'
+        assert ws.cell(5, 1).value == '-'
+        assert ws.cell(5, 3).value == 3.23
+        assert ws.cell(6, 1).value == 4.1
+        assert ws.cell(6, 3).value == 0.02
+        assert ws.cell(7, 1).value == 0.4
+        assert ws.cell(7, 3).value == 42.01
+        assert ws.cell(8, 1).value == 0
+        assert ws.cell(8, 3).value == 43232
+        assert ws.cell(9, 1).value == 40.0
+        assert ws.cell(9, 3).value == 43232.1
 
     def test_evaluate_expressions(self, some_table: Table):
         env: Environment = make_root_environment().define('x', 42).define('y', 7)

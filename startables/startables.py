@@ -116,7 +116,7 @@ class Table:
 
     def __init__(self, df: pd.DataFrame, name: str, col_specs: Dict[str, ColumnMetadata] = None,
             destinations: Optional[Iterable[str]] = None, origin: Optional[TableOrigin] = None,
-            remark: Optional[str] = None):
+            remark: Optional[str] = None, col_display_digits: Dict[str, int] = None):
         """
 
         :param df: DataFrame of Table contents.
@@ -125,6 +125,8 @@ class Table:
         :param destinations: Iterable of destination strings.
         :param origin:
         :param remark: Free-text remark about this table block.
+        :param col_display_digits: If supplied, a dictionary specifying the number of digits to be rounded to when
+                saving to file.
         """
 
         if col_specs:
@@ -142,6 +144,9 @@ class Table:
 
         self._df = df
         self.remark = remark
+        if col_display_digits:
+            self._validate_col_display_digits(col_display_digits, df.columns)
+        self.col_display_digits = col_display_digits
 
     @staticmethod
     def _validate_col_specs(col_specs, df_col_names):
@@ -149,6 +154,14 @@ class Table:
         if missing_cols:
             raise ValueError(
                 f'Missing column specifications for DataFrame columns: {missing_cols}.')
+
+    @staticmethod
+    def _validate_col_display_digits(col_display_digits, df_col_names):
+        for col_name, digits in col_display_digits.items():
+            if col_name not in df_col_names:
+                raise ValueError(f'Column name not found in DataFrame columns: {col_name}')
+            if not isinstance(digits, int):
+                raise ValueError(f'Display digits value for DataFrame column {col_name} is not an integer.')
 
     def __len__(self):
         """
@@ -347,7 +360,7 @@ class Table:
                          Defaults to number of columns in Table.
         """
         self._validate_col_specs(self._col_specs, self._df.columns)
-        df = self._df.fillna(NO_DATA_MARKER_ON_WRITE)
+        df = self._prepare_df_for_write()
         stream.write(f'**{self.name}')
         stream.write(f'{sep * ((num_cols if num_cols else len(df.columns)) - 1)}\n')
 
@@ -364,8 +377,17 @@ class Table:
         ws.append([" ".join(str(x) for x in self.destinations)])
         ws.append(self.col_names)
         ws.append(self.col_units)
-        for row in dataframe_to_rows(self._df.fillna(NO_DATA_MARKER_ON_WRITE), index=False, header=False):
+        df = self._prepare_df_for_write()
+        for row in dataframe_to_rows(df, index=False, header=False):
             ws.append(row)
+
+    def _prepare_df_for_write(self) -> pd.DataFrame:
+        df = self._df.copy()
+        # apply rounding before changing nans to str
+        if self.col_display_digits:
+            self._validate_col_display_digits(self.col_display_digits, df.columns)
+            df = df.round(self.col_display_digits)
+        return df.fillna(NO_DATA_MARKER_ON_WRITE)
 
     def _sanitize_destinations(self, destinations: Iterable[str]) -> List[str]:
         sanitized_destinations = [str(d).strip() for d in destinations]
