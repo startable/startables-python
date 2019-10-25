@@ -125,8 +125,8 @@ class Table:
         :param destinations: Iterable of destination strings.
         :param origin:
         :param remark: Free-text remark about this table block.
-        :param col_display_digits: If supplied, a dictionary specifying the number of digits to be rounded to when
-                saving to file.
+        :param col_display_digits: If supplied, a dictionary specifying the number of digits to be rounded per given
+                column name when saving to file.
         """
 
         if col_specs:
