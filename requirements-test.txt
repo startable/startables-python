@@ -1,0 +1,6 @@
+-r requirements.txt
+
+xlrd
+pytest
+coverage
+pytest-cov
