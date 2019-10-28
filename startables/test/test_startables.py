@@ -36,6 +36,12 @@ class TestTable:
         return {n: ColumnMetadata(Unit(u)) for n, u in zip(['a', 'b', 'c'], ['-', 'text', 'm'])}
 
     @fixture
+    def col_specs_with_format(self):
+        return {'a': ColumnMetadata(Unit('-'), format_str='${:,.2f}'),
+                'b': ColumnMetadata(Unit('text')),
+                'c': ColumnMetadata(Unit('m'), format_str='{0:1.4e}')}
+
+    @fixture
     def some_df_with_digits(self):
         return pd.DataFrame(data=[[nan, 'gnu', 3.23412121],
                                   [4.12, 'gnat', 0.023],
@@ -45,17 +51,13 @@ class TestTable:
                             columns=['a', 'b', 'c'])
 
     @fixture
-    def col_display_digits(self):
-        return {n: u for n, u in zip(['a', 'c'], [1, 2])}
-
-    @fixture
     def some_table(self, some_df, col_specs):
         return Table(df=some_df, name='some_table', col_specs=col_specs, destinations=['success', 'glory'])
 
     @fixture
-    def some_table_with_digits(self, some_df_with_digits, col_specs, col_display_digits):
-        return Table(df=some_df_with_digits, name='some_table_with_digits', col_specs=col_specs, destinations=['success', 'glory'],
-                     col_display_digits=col_display_digits)
+    def some_table_with_digits(self, some_df_with_digits, col_specs_with_format):
+        return Table(df=some_df_with_digits, name='some_table_with_digits', col_specs=col_specs_with_format,
+                     destinations=['success', 'glory'])
 
     def test_init_with_col_specs(self, some_df, col_specs):
         t = Table(df=some_df, name='adequate_table', col_specs=col_specs)
@@ -118,7 +120,7 @@ class TestTable:
             
             """)
 
-    def test_to_csv_with_digits(self, some_table_with_digits: Table):
+    def test_to_csv_with_format(self, some_table_with_digits: Table):
         out = io.StringIO()
         some_table_with_digits.to_csv(out)
         print(out.getvalue())
@@ -127,11 +129,11 @@ class TestTable:
             success glory
             a;b;c
             -;text;m
-            -;gnu;3.23
-            4.1;gnat;0.02
-            0.4;galah;42.01
-            0.0;gentoo;43232.0
-            40.0;gerbil;43232.1
+            -;gnu;3.2341e+00
+            $4.12;gnat;2.3000e-02
+            $0.40;galah;4.2010e+01
+            $0.04;gentoo;4.3232e+04
+            $40.04;gerbil;4.3232e+04
             
             """)
 
@@ -175,15 +177,15 @@ class TestTable:
         assert ws.cell(3, 2).value == 'b'
         assert ws.cell(4, 3).value == 'm'
         assert ws.cell(5, 1).value == '-'
-        assert ws.cell(5, 3).value == 3.23
-        assert ws.cell(6, 1).value == 4.1
-        assert ws.cell(6, 3).value == 0.02
-        assert ws.cell(7, 1).value == 0.4
-        assert ws.cell(7, 3).value == 42.01
-        assert ws.cell(8, 1).value == 0
-        assert ws.cell(8, 3).value == 43232
-        assert ws.cell(9, 1).value == 40.0
-        assert ws.cell(9, 3).value == 43232.1
+        assert ws.cell(5, 3).value == '3.2341e+00'
+        assert ws.cell(6, 1).value == '$4.12'
+        assert ws.cell(6, 3).value == '2.3000e-02'
+        assert ws.cell(7, 1).value == '$0.40'
+        assert ws.cell(7, 3).value == '4.2010e+01'
+        assert ws.cell(8, 1).value == '$0.04'
+        assert ws.cell(8, 3).value == '4.3232e+04'
+        assert ws.cell(9, 1).value == '$40.04'
+        assert ws.cell(9, 3).value == '4.3232e+04'
 
     def test_evaluate_expressions(self, some_table: Table):
         env: Environment = make_root_environment().define('x', 42).define('y', 7)

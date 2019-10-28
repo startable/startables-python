@@ -73,16 +73,25 @@ class TableOrigin:
 
 
 class ColumnMetadata:
-    def __init__(self, unit: Unit, home_unit: Optional[Unit] = None, remark: Optional[str] = None):
+    def __init__(self, unit: Unit, home_unit: Optional[Unit] = None, remark: Optional[str] = None, format_str=None):
+        '''
+
+        :param unit:
+        :param home_unit:
+        :param remark:
+        :param format_str: The format string (https://docs.python.org/3.1/library/string.html#format-specification-mini-language)
+                  to be applied to the data in the column when printing to file (excel, cvs).
+        '''
         # TODO better name than "home_unit"... "report_unit"? "cache_unit"?
         # JAWES had put forth "display_unit" but to JEACO this suggests the Table would be displayed with these units... which it isn't unless it's first explicitly converted to these units
         self.unit = unit
         self.home_unit = home_unit if home_unit else unit
         self.remark = remark
+        self.format_str = format_str
 
     def __repr__(self):
         # TODO ensure consistency of this string with field names
-        return f"{self.__class__}, unit '{self.unit}', home unit '{self.home_unit}', remark '{self.remark}'."
+        return f"{self.__class__}, unit '{self.unit}', home unit '{self.home_unit}', remark '{self.remark}', format_str '{self.format_str}'."
 
 
 class ExpressionCell:
@@ -116,7 +125,7 @@ class Table:
 
     def __init__(self, df: pd.DataFrame, name: str, col_specs: Dict[str, ColumnMetadata] = None,
             destinations: Optional[Iterable[str]] = None, origin: Optional[TableOrigin] = None,
-            remark: Optional[str] = None, col_display_digits: Dict[str, int] = None):
+            remark: Optional[str] = None):
         """
 
         :param df: DataFrame of Table contents.
@@ -144,9 +153,6 @@ class Table:
 
         self._df = df
         self.remark = remark
-        if col_display_digits:
-            self._validate_col_display_digits(col_display_digits, df.columns)
-        self.col_display_digits = col_display_digits
 
     @staticmethod
     def _validate_col_specs(col_specs, df_col_names):
@@ -154,14 +160,10 @@ class Table:
         if missing_cols:
             raise ValueError(
                 f'Missing column specifications for DataFrame columns: {missing_cols}.')
-
-    @staticmethod
-    def _validate_col_display_digits(col_display_digits, df_col_names):
-        for col_name, digits in col_display_digits.items():
-            if col_name not in df_col_names:
-                raise ValueError(f'Column name not found in DataFrame columns: {col_name}')
-            if not isinstance(digits, int):
-                raise ValueError(f'Display digits value for DataFrame column {col_name} is not an integer.')
+        for col_name, spec in col_specs.items():
+            if spec.format_str:
+                if '{' not in spec.format_str or '}' not in spec.format_str:
+                    raise ValueError(f'Format string for column {col_name} not in correct format.')
 
     def __len__(self):
         """
@@ -382,12 +384,11 @@ class Table:
             ws.append(row)
 
     def _prepare_df_for_write(self) -> pd.DataFrame:
-        df = self._df.copy()
-        # apply rounding before changing nans to str
-        if self.col_display_digits:
-            self._validate_col_display_digits(self.col_display_digits, df.columns)
-            df = df.round(self.col_display_digits)
-        return df.fillna(NO_DATA_MARKER_ON_WRITE)
+        df = self.df.fillna(NO_DATA_MARKER_ON_WRITE)
+        for col, col_spec in self._col_specs.items():
+            if col_spec.format_str:
+                df[col] = df[col].apply(lambda x: x if x == NO_DATA_MARKER_ON_WRITE else col_spec.format_str.format(x))
+        return df
 
     def _sanitize_destinations(self, destinations: Iterable[str]) -> List[str]:
         sanitized_destinations = [str(d).strip() for d in destinations]
@@ -529,6 +530,13 @@ class Bundle:
             t.to_csv(stream, sep=sep, num_cols=max_num_cols)
 
     def to_excel(self, path, header: str = '', header_sep: str = ';') -> None:
+        '''
+        :param path: Path to the location to save excel file to.
+        :param header: Text to be shown before the bundle of tables. If the text contains a newline (\n) and/or the
+                header_sep, the text will span over multiple rows and/or columns, respectively, in the excel
+                sheet.  Header will have one line of separation to the bundle tables.
+        :param header_sep: Separator to control header text to be split onto multiple columns
+        '''
         wb = openpyxl.Workbook()
         ws = wb.active
 
