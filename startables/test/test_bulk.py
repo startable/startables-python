@@ -3,7 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from startables import read_bulk, import_from_word
+from startables import read_bulk, import_from_word, read_csv
+from startables.readers.bulk import DEFAULT_READERS
 
 
 @pytest.fixture(scope='module')
@@ -43,10 +44,10 @@ def test_read_bulk_list_of_files(bulk_dir):
 def test_read_bulk_readers_include_docx(bulk_dir, input_dir):
     b = read_bulk([bulk_dir,
                    input_dir / 'docx' / 'simple_foo.docx'],
-                  readers={'docx': import_from_word})
+                  readers={**DEFAULT_READERS, **{'docx': import_from_word}})
     assert len(b.tables) == 4
 
 
-def test_read_bulk_readers_exclude_default(bulk_dir):
-    b = read_bulk(bulk_dir, readers={'xlsx': None})
+def test_read_bulk_readers_exclude_xlsx(bulk_dir):
+    b = read_bulk(bulk_dir, readers={'csv': read_csv})
     assert len(b.tables) == 1

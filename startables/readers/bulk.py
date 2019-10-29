@@ -1,9 +1,11 @@
 import glob
 import os
 from pathlib import Path
-from typing import Union, Iterable, List, Set, Callable, Dict, Optional
+from typing import Union, Iterable, Set, Callable, Dict, Optional
 
 from startables import Bundle, read_csv, read_excel
+
+DEFAULT_READERS = {'xlsx': read_excel, 'csv': read_csv}
 
 
 def read_bulk(path_specs: Union[str, Path, Iterable[Union[str, Path]]],
@@ -15,13 +17,16 @@ def read_bulk(path_specs: Union[str, Path, Iterable[Union[str, Path]]],
 
     Path specs can be any mix of one or more files, directories, and/or glob expressions.
 
-    Default supported extensions and corresponding readers are:
+    Default extensions and corresponding readers are:
         {'xlsx': startables.read_excel,
          'csv' : startables.read_csv}.
-    Use the 'readers' argument to:
-        * add more readers for other extensions;
+    Use the 'readers' argument to overwrite the default extension-reader mapping. This can be used
+    to:
+        * add more readers for other extensions, e.g.
+          readers={**DEFAULT_READERS, **{'docx': startables.import_from_word}};
         * remove the default readers to prevent the default extensions from being read; and/or
-        * replace the default readers for the default extensions.
+        * replace the default readers for the default extensions, e.g.
+          readers={**DEFAULT_READERS, **{'csv': functools.partial(read_csv, sep=',')}}.
 
     Multiple tables with the same name (within or across files) are preserved as such in the output
     bundle.
@@ -29,23 +34,18 @@ def read_bulk(path_specs: Union[str, Path, Iterable[Union[str, Path]]],
     Microsoft Office temp files (starting with "~$" or ending with ".tmp") are ignored when bulk
     reading a folder or glob expression.
 
-    :param path_specs: Can be a file, a folder or a glob expression that contains StarTable files with supported extensions. Can also be an Iterable of files, folders, and glob expressions.
+    :param path_specs: Can be a file, a folder or a glob expression that contains StarTable files
+        with supported extensions. Can also be an Iterable of files, folders, and glob expressions.
     :param readers: Dict of form {'ext': reader_func} specifying what function to use to
      read files with extensions beyond the default ext.
-     reader_func must be a callable that takes a single path argument and returns a Bundle.
      Default: {'xlsx': startables.read_excel, 'csv': startables.read_csv}.
-     To prevent the default files extensions from being read, specify its reader to be None,
-     e.g. {'xlsx': None, ...}
+     reader_func must be a callable that takes a single path argument and returns a Bundle.
+     File with extensions whose reader is set to None will not be read, e.g. {'xlsx': None, ...}
     :return: Bundle containing the tables read from all files.
     """
 
-    default_readers = {'xlsx': read_excel, 'csv': read_csv}
     if readers is None:
-        readers = default_readers
-    # Add default readers to explicitly specified readers (unless they were overridden)
-    for dr_ext in default_readers:
-        if dr_ext not in readers:
-            readers[dr_ext] = default_readers[dr_ext]
+        readers = DEFAULT_READERS
 
     if isinstance(path_specs, str) or isinstance(path_specs, Path):
         # Pack single path in something that's iterable, for later convenience
