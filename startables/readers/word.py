@@ -8,8 +8,11 @@ import pandas as pd
 from startables import Bundle, ColumnMetadata, Table
 from startables.startables import TableOrigin
 
-
 TABLE_BLOCK_MARKER_PATTERN = r'^\*\*[^\*].*'
+
+
+class WordTableBlockParsingError(Exception):
+    pass
 
 
 def import_from_word(path: Union[str, Path]) -> Bundle:
@@ -30,7 +33,9 @@ def import_from_word(path: Union[str, Path]) -> Bundle:
         raise ImportError("Missing optional dependency 'docx'. Install python-docx package "
                           "for MS Word support. Use pip or conda to install python-docx.") from None
 
-    if not os.path.exists(str(path)):
+    path = str(path)
+
+    if not os.path.exists(path):
         raise IOError(f'File not found: {path}')
 
     word_doc = docx.Document(path)
@@ -59,14 +64,12 @@ def import_from_word(path: Union[str, Path]) -> Bundle:
 
         try:
             df = pd.DataFrame(columns=col_names, data=values)
-            # enforce lowercase unit, reverting Word auto-correction of capital start letter
-            col_specs = {n: ColumnMetadata(unit=u.lower())
-                         for n, u in zip(col_names, col_units)}
-
+            col_specs = {n: ColumnMetadata(unit=u) for n, u in zip(col_names, col_units)}
             tables.append(Table(df, name=table_name, col_specs=col_specs,
-                                destinations=destinations, origin=TableOrigin(str(path))))
+                                destinations=destinations, origin=TableOrigin(path)))
         except AssertionError as e:
             # Malformed table
-            raise e
+            raise WordTableBlockParsingError(
+                f"Unable to parse table block '{table_name}' in document {path}") from e
 
-    return Bundle(tables=tables, origin=TableOrigin(str(path)))
+    return Bundle(tables=tables, origin=TableOrigin(path))
