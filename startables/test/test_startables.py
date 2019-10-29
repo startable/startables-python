@@ -39,7 +39,7 @@ class TestTable:
     def col_specs_with_format(self):
         return {'a': ColumnMetadata(Unit('-'), format_str='${:,.2f}'),
                 'b': ColumnMetadata(Unit('text')),
-                'c': ColumnMetadata(Unit('m'), format_str='{0:1.4e}')}
+                'c': ColumnMetadata(Unit('m'), format_str='.4e')}
 
     @fixture
     def some_df_with_digits(self):
@@ -47,7 +47,7 @@ class TestTable:
                                   [4.12, 'gnat', 0.023],
                                   [0.4, 'galah', 42.01],
                                   [0.04334, 'gentoo', 43232],
-                                  [40.04334, 'gerbil', 43232.0987]],
+                                  [4000.04334, 'gerbil', 43232.0987]],
                             columns=['a', 'b', 'c'])
 
     @fixture
@@ -133,7 +133,7 @@ class TestTable:
             $4.12;gnat;2.3000e-02
             $0.40;galah;4.2010e+01
             $0.04;gentoo;4.3232e+04
-            $40.04;gerbil;4.3232e+04
+            $4,000.04;gerbil;4.3232e+04
             
             """)
 
@@ -184,7 +184,7 @@ class TestTable:
         assert ws.cell(7, 3).value == '4.2010e+01'
         assert ws.cell(8, 1).value == '$0.04'
         assert ws.cell(8, 3).value == '4.3232e+04'
-        assert ws.cell(9, 1).value == '$40.04'
+        assert ws.cell(9, 1).value == '$4,000.04'
         assert ws.cell(9, 3).value == '4.3232e+04'
 
     def test_evaluate_expressions(self, some_table: Table):

@@ -56,10 +56,12 @@ class TableOrigin:
         return self._text_representation
 
     def open_edit(self) -> None:
-        raise NotImplementedError('Functionality to open editor for "{}" not implemented'.format(str(self)))
+        raise NotImplementedError(
+            'Functionality to open editor for "{}" not implemented'.format(str(self)))
 
     def get_local_file(self) -> pathlib.Path:
-        raise NotImplementedError('Functionality to open editor for "{}" not implemented'.format(str(self)))
+        raise NotImplementedError(
+            'Functionality to open editor for "{}" not implemented'.format(str(self)))
 
     # @property
     # def text_representation(self) -> str:
@@ -73,15 +75,22 @@ class TableOrigin:
 
 
 class ColumnMetadata:
-    def __init__(self, unit: Unit, home_unit: Optional[Unit] = None, remark: Optional[str] = None, format_str=None):
-        '''
-
-        :param unit:
-        :param home_unit:
-        :param remark:
-        :param format_str: The format string (https://docs.python.org/3.1/library/string.html#format-specification-mini-language)
-                  to be applied to the data in the column when printing to file (excel, cvs).
-        '''
+    def __init__(self, unit: Unit, home_unit: Optional[Unit] = None, remark: Optional[str] = None,
+                 format_str=None):
+        """
+        Metadata about the column.
+        :param unit: Column unit as per https://github.com/startable/startable-standard/blob/master/StarTable%20format%20specification.md#unit
+        :param home_unit: Other unit to which to convert this column upon request
+        :param remark: Free-text remark about this column
+        :param format_str: The format string to be applied to the data in the column when writing
+         to file (Excel, CSV). Format string syntax is as described in:
+         (https://docs.python.org/3.1/library/string.html#format-specification-mini-language)
+         Can be supplied as either
+         * a format specifier e.g. '.2f' to format 4000.04334 as '4000.04'; or
+         * a full format string, composed of a format specifier wrapped between '{:' and '}' and
+          optionally other characters outside the curly braces
+          e.g. '${:,.2f}' to format 4000.04334 as '$4,000.04'.
+        """
         # TODO better name than "home_unit"... "report_unit"? "cache_unit"?
         # JAWES had put forth "display_unit" but to JEACO this suggests the Table would be displayed with these units... which it isn't unless it's first explicitly converted to these units
         self.unit = unit
@@ -89,7 +98,7 @@ class ColumnMetadata:
         self.remark = remark
         if format_str:
             if '{' not in format_str and '}' not in format_str:
-                format_str = '{' + format_str + '}'
+                format_str = '{:' + format_str + '}'
         self.format_str = format_str
 
     def __repr__(self):
@@ -127,8 +136,8 @@ class Table:
     """
 
     def __init__(self, df: pd.DataFrame, name: str, col_specs: Dict[str, ColumnMetadata] = None,
-            destinations: Optional[Iterable[str]] = None, origin: Optional[TableOrigin] = None,
-            remark: Optional[str] = None):
+                 destinations: Optional[Iterable[str]] = None, origin: Optional[TableOrigin] = None,
+                 remark: Optional[str] = None):
         """
 
         :param df: DataFrame of Table contents.
@@ -146,7 +155,8 @@ class Table:
             df: pd.DataFrame = df.copy()
             self._col_specs = col_specs
         else:
-            self._col_specs = {col_name: ColumnMetadata(Unit(DEFAULT_UNIT_STR)) for col_name in df.columns}
+            self._col_specs = {col_name: ColumnMetadata(Unit(DEFAULT_UNIT_STR)) for col_name in
+                               df.columns}
 
         self.name = name
         if not destinations:
@@ -233,8 +243,10 @@ class Table:
         return Table(self._df.copy(), name=self.name, col_specs=copy.deepcopy(self.col_specs),
                      destinations=self._destinations.copy(), origin=copy.copy(self.origin))
 
-    def evaluate_expressions(self, context: Union[Dict[str, pyscheme.Expression], pyscheme.Environment], *,
-            inplace: bool = False):
+    def evaluate_expressions(self,
+                             context: Union[Dict[str, pyscheme.Expression], pyscheme.Environment],
+                             *,
+                             inplace: bool = False):
         # TODO Replace context type hint with EvaluationContext defined above?
         """
         Evaluate expressions in this Table based on the given context.
@@ -269,12 +281,14 @@ class Table:
             cell.update_in_data_frame(df, env)
 
         if not inplace:
-            t = Table(df=df, name=self.name, col_specs=self.col_specs, destinations=self.destinations,
+            t = Table(df=df, name=self.name, col_specs=self.col_specs,
+                      destinations=self.destinations,
                       origin=self.origin)
             return t
 
-    def convert_units(self, unit_policy: UnitPolicy, new_units: Dict[str, Unit] = None, inplace: bool = False,
-            new_unit_missing: str = 'raise') -> Optional['Table']:
+    def convert_units(self, unit_policy: UnitPolicy, new_units: Dict[str, Unit] = None,
+                      inplace: bool = False,
+                      new_unit_missing: str = 'raise') -> Optional['Table']:
         """
         Changes values and units in accordance with unit policy.
         :param unit_policy: Unit policy that will govern unit conversion.
@@ -287,7 +301,8 @@ class Table:
 
         new_unit_missing_options = {'ignore', 'raise'}
         if new_unit_missing not in new_unit_missing_options:
-            raise ValueError(f"Expected one of {new_unit_missing_options}, got '{new_unit_missing}'.")
+            raise ValueError(
+                f"Expected one of {new_unit_missing_options}, got '{new_unit_missing}'.")
 
         table = self if inplace else self.copy()
 
@@ -302,11 +317,13 @@ class Table:
                     continue  # Move on to next column.
                 try:
                     # Convert values in this col
-                    table.df[col] = table.df[col].apply(unit_policy.convert, from_unit=old_unit, to_unit=new_unit)
+                    table.df[col] = table.df[col].apply(unit_policy.convert, from_unit=old_unit,
+                                                        to_unit=new_unit)
                     # Change this col's unit to ref_unit
                     table._col_specs[col].unit = new_unit
                 except ValueError as ve:
-                    raise ValueError(f"Can't convert unit of column '{col}' from '{old_unit}' to '{new_unit}'.") from ve
+                    raise ValueError(
+                        f"Can't convert unit of column '{col}' from '{old_unit}' to '{new_unit}'.") from ve
 
         if not inplace:
             return table
@@ -319,7 +336,7 @@ class Table:
         return self.convert_units(unit_policy=unit_policy, new_units=new_units, *args, **kwargs)
 
     def convert_to_ref_units(self, unit_policy: UnitPolicy, inplace: bool = False,
-            units_not_in_policy: str = 'raise') -> Optional['Table']:
+                             units_not_in_policy: str = 'raise') -> Optional['Table']:
         """
         Converts values and units to unit policy's reference units.
         :param unit_policy:
@@ -331,7 +348,8 @@ class Table:
 
         units_not_in_policy_options = {'ignore', 'raise'}
         if units_not_in_policy not in units_not_in_policy_options:
-            raise ValueError(f"Expected one of {units_not_in_policy_options}, got '{units_not_in_policy}'.")
+            raise ValueError(
+                f"Expected one of {units_not_in_policy_options}, got '{units_not_in_policy}'.")
 
         table = self if inplace else self.copy()
 
@@ -340,12 +358,14 @@ class Table:
             if not old_unit == Unit(TEXT_COL_UNIT_STR):
                 try:
                     # Convert values in this col
-                    table.df[col] = table.df[col].apply(unit_policy.convert_to_ref, src_unit=old_unit)
+                    table.df[col] = table.df[col].apply(unit_policy.convert_to_ref,
+                                                        src_unit=old_unit)
                     # Change this col's unit to ref_unit
                     table._col_specs[col].unit = unit_policy.ref_unit(old_unit)
                 except ValueError:
                     if units_not_in_policy == 'raise':
-                        raise ValueError(f"Unit '{old_unit}' of column '{col}' not found in unit policy.")
+                        raise ValueError(
+                            f"Unit '{old_unit}' of column '{col}' not found in unit policy.")
                     pass  # Ignore the unknown unit, do no conversion
 
         if not inplace:
@@ -386,14 +406,16 @@ class Table:
         df = self.df.fillna(NO_DATA_MARKER_ON_WRITE)
         for col, col_spec in self._col_specs.items():
             if col_spec.format_str:
-                df[col] = df[col].apply(lambda x: x if x == NO_DATA_MARKER_ON_WRITE else col_spec.format_str.format(x))
+                df[col] = df[col].apply(
+                    lambda x: x if x == NO_DATA_MARKER_ON_WRITE else col_spec.format_str.format(x))
         return df
 
     def _sanitize_destinations(self, destinations: Iterable[str]) -> List[str]:
         sanitized_destinations = [str(d).strip() for d in destinations]
         for d in sanitized_destinations:
             if WHITESPACE_RE.search(d):
-                raise ValueError(f"Destination '{d}' contains illegal whitespace in Table '{self.name}'.")
+                raise ValueError(
+                    f"Destination '{d}' contains illegal whitespace in Table '{self.name}'.")
         if len(set(sanitized_destinations)) != len(sanitized_destinations):
             raise ValueError(f"Illegal duplicate destinations in Table '{self.name}'.")
         return sanitized_destinations
@@ -415,10 +437,12 @@ class Table:
             # TODO validate expressions? syntax, maybe obvious eval error (div by zero?)
             for row in rows_with_expr:
                 try:
-                    expression = pyscheme.parse_expression(_strip_expression_markers(df.iloc[row, col]))
+                    expression = pyscheme.parse_expression(
+                        _strip_expression_markers(df.iloc[row, col]))
                 except SyntaxError as se:
-                    raise SyntaxError(f"Syntax error in expression in table '{self.name}', column {col}, row {row}, "
-                                      f"origin: {self.origin}") from se
+                    raise SyntaxError(
+                        f"Syntax error in expression in table '{self.name}', column {col}, row {row}, "
+                        f"origin: {self.origin}") from se
                 ec.append(ExpressionCell(row, col, expression))
         return ec
 
@@ -442,10 +466,11 @@ class Bundle:
         return self._tables
 
     def _filter_tables(self, name: Optional[str] = None, name_pattern: str = '',
-            destination: Optional[str] = None, destination_pattern: str = '',
-            ignore_case: bool = True) -> List[Table]:
+                       destination: Optional[str] = None, destination_pattern: str = '',
+                       ignore_case: bool = True) -> List[Table]:
         if name_pattern and name:
-            raise ValueError("Both name and name_pattern were specified. Either may be specified, but not both.")
+            raise ValueError(
+                "Both name and name_pattern were specified. Either may be specified, but not both.")
         if destination_pattern and destination:
             raise ValueError(
                 "Both destination and destination_pattern were specified. Either may be specified, but not both.")
@@ -458,8 +483,8 @@ class Bundle:
                 and any(re.search(destination_pattern, d, flags=birthday) for d in t.destinations)]
 
     def filter(self, name: Optional[str] = None, name_pattern: str = '',
-            destination: Optional[str] = None, destination_pattern: str = '',
-            ignore_case: bool = True) -> 'Bundle':
+               destination: Optional[str] = None, destination_pattern: str = '',
+               ignore_case: bool = True) -> 'Bundle':
         """
         Returns a Bundle containing a subset of this Bundle's member tables,
         filtered by name and/or destination.
@@ -473,12 +498,13 @@ class Bundle:
         destinations list. May only be specified if destination is not given.
         :param ignore_case: If True, will match names and destinations in a case-insensitive way. (default=True)
         """
-        return Bundle(self._filter_tables(name, name_pattern, destination, destination_pattern, ignore_case),
-                      self.origin)
+        return Bundle(
+            self._filter_tables(name, name_pattern, destination, destination_pattern, ignore_case),
+            self.origin)
 
     def pop_tables(self, name: Optional[str] = None, name_pattern: str = '',
-            destination: Optional[str] = None, destination_pattern: str = '',
-            ignore_case: bool = True) -> List[Table]:
+                   destination: Optional[str] = None, destination_pattern: str = '',
+                   ignore_case: bool = True) -> List[Table]:
         """
         Removes member tables, selected by name and/or destination. Returns the removed tables.
         Name and destination filters can be specified as exact strings, or as regular expression strings.
@@ -491,15 +517,17 @@ class Bundle:
         destinations list. May only be specified if destination is not given.
         :param ignore_case: If True, will match names and destinations in a case-insensitive way. (default=True)
         """
-        tables_to_pop = self._filter_tables(name, name_pattern, destination, destination_pattern, ignore_case)
+        tables_to_pop = self._filter_tables(name, name_pattern, destination, destination_pattern,
+                                            ignore_case)
         self._tables = [t for t in self._tables if t not in tables_to_pop]
         return tables_to_pop
 
     def copy(self):
         return Bundle([t.copy() for t in self._tables], self.origin)
 
-    def evaluate_expressions(self, context: Union[Dict[str, pyscheme.Expression], pyscheme.Environment],
-            inplace: bool = False):
+    def evaluate_expressions(self,
+                             context: Union[Dict[str, pyscheme.Expression], pyscheme.Environment],
+                             inplace: bool = False):
         """
         If inplace = False, returns a new Bundle with any expressions in member tables evaluated in the given context.
         If inplace = True, evaluates expressions in-place in member tables instead.
@@ -593,7 +621,8 @@ def read_csv(filepath_or_buffer: Union[str, pathlib.Path, TextIO], sep: str = ';
             if missing_separators == 'ignore':
                 first_line = block[0:block.find('\n')]
                 # suppress exception and perform layer 1 parse
-                print(f'WARNING: CSV table block "{first_line}" in "{filename}" could not be parsed due to: "{str(e).strip()}". Will attempt fix...')
+                print(
+                    f'WARNING: CSV table block "{first_line}" in "{filename}" could not be parsed due to: "{str(e).strip()}". Will attempt fix...')
 
                 # find the max count of sep in this block
                 lines = block.split('\n')  # i shall do this only once
@@ -602,7 +631,8 @@ def read_csv(filepath_or_buffer: Union[str, pathlib.Path, TextIO], sep: str = ';
 
                 # zip into list of tuples with [(sep_count1, line1), (sep_count2, line2), ]
                 # only add if missing sep (never remove)
-                corrected_lines = [t[1] if t[0] == max_sep else f'{t[1]}{sep * (max_sep - t[0])}' for t in zip(sep_counts, lines)]
+                corrected_lines = [t[1] if t[0] == max_sep else f'{t[1]}{sep * (max_sep - t[0])}'
+                                   for t in zip(sep_counts, lines)]
                 corrected_block = '\n'.join(corrected_lines)
 
                 # retry layer 2 parse
@@ -611,7 +641,8 @@ def read_csv(filepath_or_buffer: Union[str, pathlib.Path, TextIO], sep: str = ';
                                            na_values=[''], keep_default_na=False, *args, **kwargs)
                 except pd.errors.ParserError as e:
                     # nope, author of csv file needs slap and roundhouse kick...  :-(
-                    print(f'ERROR: CSV table block "{first_line}" in "{filename}" could not be corrected, still got {str(e).strip()}')
+                    print(
+                        f'ERROR: CSV table block "{first_line}" in "{filename}" could not be corrected, still got {str(e).strip()}')
                     raise e
             else:
                 # missing_separators='raise' => re-throw
@@ -649,7 +680,8 @@ def read_csv(filepath_or_buffer: Union[str, pathlib.Path, TextIO], sep: str = ';
     else:
         # stream is already opened, because user wrapped the method in ContextManager "with open(x) as y ... "
         filename = filepath_or_buffer.name
-        print(f'WARNING: startables.read_csv(): Excel-generated CSV files may not be decoded correctly when stream is passed. Consider passing path of file {filename} as pathlib.Path or str to ensure correct detection of encoding.')
+        print(
+            f'WARNING: startables.read_csv(): Excel-generated CSV files may not be decoded correctly when stream is passed. Consider passing path of file {filename} as pathlib.Path or str to ensure correct detection of encoding.')
 
         csv = filepath_or_buffer.read()
         csv_blocks = BLOCK_SEPARATOR.split(csv)
@@ -667,7 +699,8 @@ def read_csv(filepath_or_buffer: Union[str, pathlib.Path, TextIO], sep: str = ';
         if TABLE_MARKER.match(block):
             df_block = _parse_csv_table_block(block)
             # go ahead with layer 3 parse 
-            csv_tables.extend(_extract_unparsed_tables_from_df_entire_file(df_block, TableOrigin(filename)))
+            csv_tables.extend(
+                _extract_unparsed_tables_from_df_entire_file(df_block, TableOrigin(filename)))
         elif DIRECTIVE_MARKER.match(block):
             pass
         elif TEMPLATE_MARKER.match(block):
@@ -700,7 +733,8 @@ def _make_single_dataframe_from_excel_workbook(io) -> pd.DataFrame:
     :param io: anything accepted by pandas.read_excel()'s io parameter
     """
     # Produce dictionary whose values are the data frames for each sheet
-    dfs_by_sheet = pd.read_excel(io, sheet_name=None, header=None, na_values=[''], keep_default_na=False)
+    dfs_by_sheet = pd.read_excel(io, sheet_name=None, header=None, na_values=[''],
+                                 keep_default_na=False)
     # We need to append a blank row to each data frame since by specification, startables
     # are separated by empty lines
     for sheet_name, df in dfs_by_sheet.items():
@@ -716,11 +750,13 @@ def _extract_bundle_from_df_entire_file(df_entire_file: pd.DataFrame, origin: Ta
 
 
 def _extract_unparsed_tables_from_df_entire_file(df_entire_file: pd.DataFrame,
-        origin: TableOrigin) -> Generator[Table, None, None]:
+                                                 origin: TableOrigin) -> Generator[
+    Table, None, None]:
     # Figure out where tables start and end
     whatsthis = df_entire_file.iloc[:, 0].str
 
-    table_start_rows = df_entire_file.index[df_entire_file.iloc[:, 0].str.startswith('**', na=False)].tolist()
+    table_start_rows = df_entire_file.index[
+        df_entire_file.iloc[:, 0].str.startswith('**', na=False)].tolist()
     table_end_rows = table_start_rows[1:] + [len(df_entire_file)]
 
     # Parse tables one by one
@@ -731,7 +767,8 @@ def _extract_unparsed_tables_from_df_entire_file(df_entire_file: pd.DataFrame,
             yield table
 
 
-def _parse_table_from_unparsed_table_dataframe(df_unparsed_table: pd.DataFrame, origin: TableOrigin) -> Optional[Table]:
+def _parse_table_from_unparsed_table_dataframe(df_unparsed_table: pd.DataFrame,
+                                               origin: TableOrigin) -> Optional[Table]:
     """
     If given a pandas.DataFrame that contains an entire table block including name and destination fields,
     return a parsed Table.
@@ -762,17 +799,23 @@ def _parse_table_from_unparsed_table_dataframe(df_unparsed_table: pd.DataFrame, 
             column = column.astype(str).str.strip().replace(nan, '')
         elif unit == 'datetime':
             if any(column.isna()):
-                raise ValueError(f"Illegal empty cell in datetime column '{col_name}' of table '{table_name}'.")
+                raise ValueError(
+                    f"Illegal empty cell in datetime column '{col_name}' of table '{table_name}'.")
             if any(column.apply(_is_illegal_value_in_datetime_column)):
-                raise ValueError(f"Illegal string in datetime column '{col_name}' of table '{table_name}'.")
-            column = column.apply(func=_to_datetime, errors='ignore').replace(NO_DATA_MARKERS_ON_READ, nan)
+                raise ValueError(
+                    f"Illegal string in datetime column '{col_name}' of table '{table_name}'.")
+            column = column.apply(func=_to_datetime, errors='ignore').replace(
+                NO_DATA_MARKERS_ON_READ, nan)
         else:
             # By default, interpret as a column of numeric values
             if any(column.isna()):
-                raise ValueError(f"Illegal empty cell in numerical column '{col_name}' of table '{table_name}'.")
+                raise ValueError(
+                    f"Illegal empty cell in numerical column '{col_name}' of table '{table_name}'.")
             if any(column.apply(_is_illegal_value_in_numeric_column)):
-                raise ValueError(f"Illegal string in numerical column '{col_name}' of table '{table_name}'.")
-            column = column.apply(func=pd.to_numeric, errors='ignore').replace(NO_DATA_MARKERS_ON_READ, nan)
+                raise ValueError(
+                    f"Illegal string in numerical column '{col_name}' of table '{table_name}'.")
+            column = column.apply(func=pd.to_numeric, errors='ignore').replace(
+                NO_DATA_MARKERS_ON_READ, nan)
 
             # TODO add feature: when parsing numeric and datetime cols: errors='ignore', 'coerce', 'raise' like pd.to_numeric
 
@@ -784,7 +827,8 @@ def _parse_table_from_unparsed_table_dataframe(df_unparsed_table: pd.DataFrame, 
     df_new = pd.concat(column_series, axis=1)
     df_new.reset_index(inplace=True, drop=True)
 
-    table = Table(df=df_new, name=table_name, col_specs=col_specs, destinations=destinations, origin=origin)
+    table = Table(df=df_new, name=table_name, col_specs=col_specs, destinations=destinations,
+                  origin=origin)
     return table
 
 
