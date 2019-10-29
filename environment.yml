@@ -8,9 +8,6 @@ dependencies:
   - pandas
   - xlrd  # to support pandas.read_excel()
   - openpyxl
-  - pypandoc
-  - pyyaml
-  - appdirs
   # TEST
   - pytest
   - coverage
