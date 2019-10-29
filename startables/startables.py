@@ -87,6 +87,9 @@ class ColumnMetadata:
         self.unit = unit
         self.home_unit = home_unit if home_unit else unit
         self.remark = remark
+        if format_str:
+            if '{' not in format_str and '}' not in format_str:
+                format_str = '{' + format_str + '}'
         self.format_str = format_str
 
     def __repr__(self):
@@ -160,10 +163,6 @@ class Table:
         if missing_cols:
             raise ValueError(
                 f'Missing column specifications for DataFrame columns: {missing_cols}.')
-        for col_name, spec in col_specs.items():
-            if spec.format_str:
-                if '{' not in spec.format_str or '}' not in spec.format_str:
-                    raise ValueError(f'Format string for column {col_name} not in correct format.')
 
     def __len__(self):
         """
