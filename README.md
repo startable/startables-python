@@ -139,10 +139,16 @@ In a coming release, the following items are lined up to be...
 
 #### Added
 
+* {...crickets chirping...}
+
+### 0.8.3 - 2019-10-30
+
+#### Added
+
 * [#2](https://github.com/startable/startables-python/issues/2): `read_bulk()` convenience function to read multiple StarTable files at once into a single `Bundle`. 
 * `import_from_word()` utility function to parse table blocks from tables in Microsoft Word `*.docx` files. 
 
-### 0.8.2 -2010-10-30
+### 0.8.2 - 2019-10-30
 
 #### Added
 
