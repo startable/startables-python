@@ -144,6 +144,12 @@ In a coming release, the following items are lined up to be...
 * `import_from_word()` utility function to parse table blocks from tables in Microsoft Word `*.docx` files. 
 * [#6](https://github.com/startable/startables-python/issues/6): Optional `header` parameter to `Bundle.to_csv()` and `Bundle.to_excel()` to allow writing a free-text header at the top of the created file. Additionally, optional `header_sep` argument to `Bundle.to_excel()`, indicating a separator to split the header across multiple columns. 
 
+### 0.8.1 - 2019-09-05
+
+#### Added
+
+* Updated setup.py and setup.cfd to enable proper release on PyPI.
+
 ### 0.8.0 - 2019-09-03
 
 #### Changed
