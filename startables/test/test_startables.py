@@ -12,6 +12,7 @@ try:
 except ImportError:
     # openpyxl < 2.6
     from openpyxl.worksheet import Worksheet
+from openpyxl import load_workbook
 
 from pyscheme import make_root_environment, Environment
 from startables import ColumnMetadata
@@ -35,8 +36,28 @@ class TestTable:
         return {n: ColumnMetadata(Unit(u)) for n, u in zip(['a', 'b', 'c'], ['-', 'text', 'm'])}
 
     @fixture
+    def col_specs_with_format(self):
+        return {'a': ColumnMetadata(Unit('-'), format_str='${:,.2f}'),
+                'b': ColumnMetadata(Unit('text')),
+                'c': ColumnMetadata(Unit('m'), format_str='.4e')}
+
+    @fixture
+    def some_df_with_digits(self):
+        return pd.DataFrame(data=[[nan, 'gnu', 3.23412121],
+                                  [4.12, 'gnat', 0.023],
+                                  [0.4, 'galah', 42.01],
+                                  [0.04334, 'gentoo', 43232],
+                                  [4000.04334, 'gerbil', 43232.0987]],
+                            columns=['a', 'b', 'c'])
+
+    @fixture
     def some_table(self, some_df, col_specs):
         return Table(df=some_df, name='some_table', col_specs=col_specs, destinations=['success', 'glory'])
+
+    @fixture
+    def some_table_with_digits(self, some_df_with_digits, col_specs_with_format):
+        return Table(df=some_df_with_digits, name='some_table_with_digits', col_specs=col_specs_with_format,
+                     destinations=['success', 'glory'])
 
     def test_init_with_col_specs(self, some_df, col_specs):
         t = Table(df=some_df, name='adequate_table', col_specs=col_specs)
@@ -99,6 +120,23 @@ class TestTable:
             
             """)
 
+    def test_to_csv_with_format(self, some_table_with_digits: Table):
+        out = io.StringIO()
+        some_table_with_digits.to_csv(out)
+        print(out.getvalue())
+        assert out.getvalue() == dedent("""\
+            **some_table_with_digits;;
+            success glory
+            a;b;c
+            -;text;m
+            -;gnu;3.2341e+00
+            $4.12;gnat;2.3000e-02
+            $0.40;galah;4.2010e+01
+            $0.04;gentoo;4.3232e+04
+            $4,000.04;gerbil;4.3232e+04
+            
+            """)
+
     def test_to_csv_nonstring_colnames_and_destinations(self):
         # PS-53 Bundle.to_csv() fails when column names are not strings
         nonstring_colnames = [1.234, 666.0, 42.0]
@@ -129,6 +167,25 @@ class TestTable:
         assert ws.cell(4, 3).value == 'm'
         assert ws.cell(5, 1).value == '-'
         assert ws.cell(6, 3).value == '{{(+ x y)}}'
+
+    def test_to_excel_with_digits(self, some_table_with_digits: Table):
+        wb = openpyxl.Workbook()
+        ws: Worksheet = wb.active
+        some_table_with_digits.to_excel(ws)
+        assert ws.cell(row=1, column=1).value == f'**{some_table_with_digits.name}'
+        assert ws.cell(2, 1).value == f'{" ".join(some_table_with_digits.destinations)}'
+        assert ws.cell(3, 2).value == 'b'
+        assert ws.cell(4, 3).value == 'm'
+        assert ws.cell(5, 1).value == '-'
+        assert ws.cell(5, 3).value == '3.2341e+00'
+        assert ws.cell(6, 1).value == '$4.12'
+        assert ws.cell(6, 3).value == '2.3000e-02'
+        assert ws.cell(7, 1).value == '$0.40'
+        assert ws.cell(7, 3).value == '4.2010e+01'
+        assert ws.cell(8, 1).value == '$0.04'
+        assert ws.cell(8, 3).value == '4.3232e+04'
+        assert ws.cell(9, 1).value == '$4,000.04'
+        assert ws.cell(9, 3).value == '4.3232e+04'
 
     def test_evaluate_expressions(self, some_table: Table):
         env: Environment = make_root_environment().define('x', 42).define('y', 7)
@@ -441,3 +498,67 @@ class TestBundle:
 
     def test_to_excel(self, some_bundle: Bundle, tmpdir):
         some_bundle.to_excel(tmpdir.join('some_bundle.xlsx'))
+
+    def test_to_csv_with_header(self, some_bundle: Bundle):
+        out = io.StringIO()
+        some_bundle.to_csv(out, header='Info table\nWith:; farm animals, Fruit, etc.\t', sep=';')
+        assert out.getvalue() == dedent("""\
+            Info table
+            With:; farm animals, Fruit, etc.
+            
+            **farm_animals;;;
+            your_farm my_farm farms_galore
+            species;n_legs;avg_weight
+            text;-;kg
+            chicken;2.0;3
+            pig;4.0;{{(* age 30)}}
+            goat;4.0;-
+            cow;-;200
+            goose;2.0;9
+            1234;-;-
+
+            **fruit;;;
+            all
+            kind;is_yummy
+            text;onoff
+            apple;0
+            raspberry;1
+            strawberry;1
+            pineapple;0
+
+            **taxidermy;;;
+            all
+            name;species;needs_repair;time_of_death
+            text;text;onoff;datetime
+            Sam;crow;1;2012-04-28 12:34:00
+            Guy;mouse;0;-
+            Kurt;ferret;0;2012-04-30 12:34:00
+            Louise;rabbit;0;2012-05-01 12:34:00
+
+            **empty_table;;;
+            all
+            foo;bar
+            text;-
+
+            """)
+
+    def test_to_excel_with_header(self, some_bundle: Bundle, tmpdir):
+
+        header = ' Test Header\nDate:; Today\nNumeric Value:; 0.123\n'
+        header_sep = ';'
+
+        # write the bundle to excel
+        some_bundle.to_excel(tmpdir.join('some_bundle.xlsx'), header=header, header_sep=header_sep)
+
+        # now read in the excel table
+        wb = load_workbook(filename=tmpdir.join('some_bundle.xlsx'), read_only=True)
+        ws = wb.active
+        # compare line/rows and their contents
+        for line, row in zip(header.split('\n'), ws.rows):
+            if line == '':
+                for cell in row:
+                    assert(cell.value == None)
+            else:
+                for col, cell in zip(line.split(header_sep), row):
+                    assert (col == cell.value)
+
