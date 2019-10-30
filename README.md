@@ -8,7 +8,7 @@ Python package with data structures and functionality to read/write files in Sta
 
 For feature requests and bugs relating specifically to this Python package, please refer to this GitHub project's issue tracker.  
 
-For issues relating to the StarTable standard more broadly, please consult the [StarTable standard page](https://github.com/startable/startable-standard). 
+For issues relating to the StarTable format specification more broadly, please consult the [StarTable standard page](https://github.com/startable/startable-standard). 
 
 ### Contribute and explore
 
@@ -135,12 +135,14 @@ This project follows [semantic versioning](https://semver.org/). This changelog 
 
 ### Unreleased
 
-The following items are planned to be...
+In a coming release, the following items are lined up to be...
 
 #### Added
 
+* `ColumnMetadata` optional property `format_str`: format string to the column's values when writing to file.
 * `read_bulk()` convenience function to read multiple StarTable files at once into a single `Bundle`. 
 * `import_from_word()` utility function to parse table blocks from tables in Microsoft Word `*.docx` files. 
+* Optional `header` parameter to `Bundle.to_csv()` and `Bundle.to_excel()` to allow writing a free-text header at the top of the created file. Additionally, optional `header_sep` argument to `Bundle.to_excel()`, indicating a separator to split the header across multiple columns. 
 
 ### 0.8.0 - 2019-09-03
 
