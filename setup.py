@@ -60,6 +60,7 @@ setup(
     python_requires='>=3.6',
 
     install_requires=['numpy', 'pandas', 'openpyxl'],
+    tests_require=['pytest'],
 
     # Same for developer dependencies
     # extras_require={

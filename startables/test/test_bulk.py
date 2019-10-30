@@ -3,7 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from startables import read_bulk
+from startables import read_bulk, import_from_word, read_csv
+from startables.readers.bulk import DEFAULT_READERS
 
 
 @pytest.fixture(scope='module')
@@ -17,24 +18,36 @@ def bulk_dir(input_dir) -> Path:
 
 
 def test_read_bulk_dir(bulk_dir):
-    bundle = read_bulk(bulk_dir)
-    assert bundle  # is not None
-    assert len(bundle.tables) == 3
-    assert len(bundle.filter(name_pattern='BarTable').tables) == 1
-    assert len(bundle.filter(name_pattern='BazBass').tables) == 2
+    b = read_bulk(bulk_dir)
+    assert b  # is not None
+    assert len(b.tables) == 3
+    assert len(b.filter(name_pattern='BarTable').tables) == 1
+    assert len(b.filter(name_pattern='BazBass').tables) == 2
 
 
 def test_read_bulk_glob(bulk_dir):
-    bundle = read_bulk(str(bulk_dir / '*'))
-    assert bundle  # is not None
-    assert len(bundle.tables) == 3
-    assert len(bundle.filter(name_pattern='BarTable').tables) == 1
-    assert len(bundle.filter(name_pattern='BazBass').tables) == 2
+    b = read_bulk(str(bulk_dir / '*'))
+    assert b  # is not None
+    assert len(b.tables) == 3
+    assert len(b.filter(name_pattern='BarTable').tables) == 1
+    assert len(b.filter(name_pattern='BazBass').tables) == 2
 
 
 def test_read_bulk_list_of_files(bulk_dir):
-    bundle = read_bulk([bulk_dir / 'simple_bar.csv', bulk_dir / 'simple_baz_with2sheets.xlsx'])
-    assert bundle  # is not None
-    assert len(bundle.tables) == 3
-    assert len(bundle.filter(name_pattern='BarTable').tables) == 1
-    assert len(bundle.filter(name_pattern='BazBass').tables) == 2
+    b = read_bulk([bulk_dir / 'simple_bar.csv', bulk_dir / 'simple_baz_with2sheets.xlsx'])
+    assert b  # is not None
+    assert len(b.tables) == 3
+    assert len(b.filter(name_pattern='BarTable').tables) == 1
+    assert len(b.filter(name_pattern='BazBass').tables) == 2
+
+
+def test_read_bulk_readers_include_docx(bulk_dir, input_dir):
+    b = read_bulk([bulk_dir,
+                   input_dir / 'docx' / 'simple_foo.docx'],
+                  readers={**DEFAULT_READERS, **{'docx': import_from_word}})
+    assert len(b.tables) == 4
+
+
+def test_read_bulk_readers_exclude_xlsx(bulk_dir):
+    b = read_bulk(bulk_dir, readers={'csv': read_csv})
+    assert len(b.tables) == 1
