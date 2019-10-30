@@ -139,9 +139,14 @@ In a coming release, the following items are lined up to be...
 
 #### Added
 
-* [#5](https://github.com/startable/startables-python/issues/5): `ColumnMetadata` optional property `format_str`: format string to the column's values when writing to file.
 * [#2](https://github.com/startable/startables-python/issues/2): `read_bulk()` convenience function to read multiple StarTable files at once into a single `Bundle`. 
 * `import_from_word()` utility function to parse table blocks from tables in Microsoft Word `*.docx` files. 
+
+### 0.8.2 -2010-10-30
+
+#### Added
+
+* [#5](https://github.com/startable/startables-python/issues/5): `ColumnMetadata` optional property `format_str`: format string specifying how the column's values will be formatted when writing to file using  `Bundle.to_csv()` and `Bundle.to_excel()`.
 * [#6](https://github.com/startable/startables-python/issues/6): Optional `header` parameter to `Bundle.to_csv()` and `Bundle.to_excel()` to allow writing a free-text header at the top of the created file. Additionally, optional `header_sep` argument to `Bundle.to_excel()`, indicating a separator to split the header across multiple columns. 
 
 ### 0.8.1 - 2019-09-05
