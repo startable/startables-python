@@ -1,0 +1,20 @@
+Header
+Date:;26-11-2019
+Description:;Example csv with a header
+;;;;
+**layer_cake;;;;
+birthday_party
+height;segment_top;diameter;colour
+mm;mm;cm;text
+0;50;25;pink
+50;65;15;white
+65;75;15;blue
+
+**beverages;;;
+birthday_party
+name;volume;quantity
+text;mL;-
+orange juice;500;3
+sparkling water;1000;5
+soda;350;24
+rasperberry soda;350;24
