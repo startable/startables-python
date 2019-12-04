@@ -276,6 +276,10 @@ class TestBundle:
         with open(str(csv_path)) as f:
             return read_csv(f)
 
+    @fixture
+    def csv_path_with_header(self, input_dir: Path) -> Path:
+        return input_dir / 'example_header.csv'
+
     def test__filter_tables_noargs(self, some_bundle: Bundle):
         tables = some_bundle._filter_tables()
         assert len(tables) == 4
@@ -453,6 +457,29 @@ class TestBundle:
             read_csv(str(input_dir / 'example_huge_file_missing_unit_and_values.csv'))
         assert "Illegal empty cell in numerical column '-' of table 'load_markovMatrixSetup" in str(excinfo.value)
 
+    def test_read_csv_with_header(self, csv_path_with_header: Path):
+        with open(str(csv_path_with_header)) as f:
+            b = read_csv(f)
+        assert len(b.tables) == 2
+        t = b.tables[0]
+        assert t.name == 'layer_cake'
+        assert t.col_names == ['height', 'segment_top', 'diameter', 'colour']
+        assert t.col_units == ['mm', 'mm', 'cm', 'text']
+        assert t.destinations == ['birthday_party']
+        df = t.df
+        assert df.iloc[2, 0] == 65
+        assert df.iloc[2, 1] == 75
+        assert df.loc[0, 'colour'] == 'pink'
+
+        t2 = b.tables[1]
+        assert t2.name == 'beverages'
+        assert t.destinations == ['birthday_party']
+        df = t2.df
+        assert df.loc[0, 'name'] == 'orange juice'
+        assert df.loc[1, 'volume'] == 1000
+        assert df.loc[3, 'quantity'] == 24
+
+
     # TODO test write datetime
     # TODO test read illegal empty cells, illegal str in num col, illegal values in datetime columns
 
@@ -502,10 +529,11 @@ class TestBundle:
     def test_to_csv_with_header(self, some_bundle: Bundle):
         out = io.StringIO()
         some_bundle.to_csv(out, header='Info table\nWith:; farm animals, Fruit, etc.\t', sep=';')
+        print(out.getvalue())
         assert out.getvalue() == dedent("""\
             Info table
             With:; farm animals, Fruit, etc.
-            
+            ;;;
             **farm_animals;;;
             your_farm my_farm farms_galore
             species;n_legs;avg_weight
