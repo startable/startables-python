@@ -454,6 +454,8 @@ class Bundle:
      * are understood as having a common context, in particular when evaluating expressions.
     """
 
+    MIN_BUNDLE_SEPARATOR = 3
+
     def __init__(self, tables: Iterable[Table], origin: Optional[TableOrigin] = None):
         self._tables = list(tables)
         self.origin = origin
@@ -551,7 +553,9 @@ class Bundle:
         max_num_cols = max(len(t.col_names) for t in self._tables)
         if header:
             stream.write(header.rstrip())
-            stream.write('\n\n')
+            stream.write('\n')
+            stream.write(sep * Bundle.MIN_BUNDLE_SEPARATOR)
+            stream.write('\n')
 
         for t in self._tables:
             t.to_csv(stream, sep=sep, num_cols=max_num_cols)
@@ -651,7 +655,7 @@ def read_csv(filepath_or_buffer: Union[str, pathlib.Path, TextIO], sep: str = ';
         return df_block
 
     # re thingies used...
-    BLOCK_SEPARATOR = re.compile(r'(\n[SEP]{3,})+\n'.replace('SEP', sep))  # escape hell if f-string
+    BLOCK_SEPARATOR = re.compile(r'(\n[SEP]{MIN,})+\n'.replace('SEP', sep).replace('MIN', str(Bundle.MIN_BUNDLE_SEPARATOR)))  # escape hell if f-string
     TABLE_MARKER = re.compile(r'^\*{2}(\w*)')
     DIRECTIVE_MARKER = re.compile(r'^\*{3}(\w*)')
     TEMPLATE_MARKER = re.compile(r'^:{1,3}(\w*)')
