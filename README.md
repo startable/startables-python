@@ -22,6 +22,12 @@ Available on PyPI:
 pip install startables
 ```
 
+and on conda-forge:
+
+```
+conda install startables -c conda-forge
+```
+
 ## Example usage
 
 ```python
