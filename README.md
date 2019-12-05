@@ -147,6 +147,12 @@ In a coming release, the following items are lined up to be...
 
 * {...crickets chirping...}
 
+### 0.8.4 - 2019-12-05
+
+#### Fixed
+
+* `Bundle.to_csv()` puts a separator on the blank line between the header and the remainder of the file, to facilitate round-trip read using `read_csv()`. This is a quick-fix workaround, because the real problem lies with the `read_csv()` parser.
+
 ### 0.8.3 - 2019-10-30
 
 #### Added
