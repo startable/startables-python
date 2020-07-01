@@ -10,15 +10,17 @@ Current implementation ignores everything except table blocks.
 """
 import itertools
 from os import PathLike
-from typing import List, Iterable, Optional, Tuple, Any
+from typing import List, Optional, Tuple, Any, TextIO
 import pandas as pd
 import numpy as np
 
 from .. import pdtable
-from ..store import StarBlockType, TableBundle
+from ..store import StarBlockType, BlockGenerator
 
 
 _TF_values = {'0': False, '1': True}
+
+
 def _parse_onoff_column(values):
     try:
         as_bool = [_TF_values[v.strip()] for v in values]
@@ -72,41 +74,60 @@ def make_token(token_type, lines, sep, origin) -> Tuple[StarBlockType, Any]:
     return token_type,  None if factory is None else factory(lines, sep, origin)
 
 
-def read_file_csv(file: PathLike, sep: str = ';') -> Iterable[Optional[Tuple[StarBlockType, Any]]]:
-    """
-    Read starTable tokens from CSV file, yielding them one token at a time.
-    """
-
+def read_stream_csv(f: TextIO, sep: str, origin: Optional[str] = None) -> BlockGenerator:
     # Loop seems clunky with repeated init and emit clauses -- could probably be cleaned up
     # but I haven't seen how.
+    # Template data handling is half-hearted, mostly because of doubts on StarTable syntax
+    # Must all template data have leading `:`?
+    # In any case, avoiding row-wise emit for multi-line template data should be a priority.
+    if origin is None:
+        origin = 'Stream'
+
+    def is_blank(s):
+        """
+        True if first cell is empty
+
+        assert is_blank('   ')
+        assert is_blank('')
+        assert is_blank(';')
+        assert not is_blank('foo')
+        assert not is_blank('  foo;')
+        assert not is_blank('foo;')
+        """
+        ss = s.lstrip()
+        return not ss or ss.startswith(sep)
+
     lines = []
     block = StarBlockType.METADATA
     block_line = 0
-    with open(file) as f:
-        for line_number_0based, line in enumerate(f):
-            next_block = None
-            if line.startswith('**'):
-                if line.startswith('***'):
-                    next_block = StarBlockType.DIRECTIVE
-                else:
-                    next_block = StarBlockType.TABLE
-            elif line.startswith(':'):
-                next_block = StarBlockType.TEMPLATE_ROW
-            elif line.startswith(sep) and not block == StarBlockType.METADATA:
-                next_block = StarBlockType.BLANK
+    for line_number_0based, line in enumerate(f):
+        next_block = None
+        if line.startswith('**'):
+            if line.startswith('***'):
+                next_block = StarBlockType.DIRECTIVE
+            else:
+                next_block = StarBlockType.TABLE
+        elif line.startswith(':'):
+            next_block = StarBlockType.TEMPLATE_ROW
+        elif is_blank(line) and not block == StarBlockType.METADATA:
+            next_block = StarBlockType.BLANK
 
-            if next_block is not None:
-                yield make_token(block, lines, sep, pdtable.TableOriginCSV(str(file), block_line))
-                lines = []
-                block = next_block
-                block_line = line_number_0based+1
+        if next_block is not None:
+            yield make_token(block, lines, sep, pdtable.TableOriginCSV(origin, block_line))
+            lines = []
+            block = next_block
+            block_line = line_number_0based+1
 
-            lines.append(line)
+        line = line.rstrip('\n')
+        lines.append(line)
 
     if lines:
-        yield make_token(block, lines, sep, pdtable.TableOriginCSV(str(file), block_line))
+        yield make_token(block, lines, sep, pdtable.TableOriginCSV(origin, block_line))
 
 
-def read_bundle_from_csv(input_path: PathLike, sep: Optional[str] = ';') -> TableBundle:
-    """Read single csv-file to TableBundle"""
-    return TableBundle(read_file_csv(input_path, sep))
+def read_file_csv(file: PathLike, sep: str = ';') -> BlockGenerator:
+    """
+    Read starTable tokens from CSV file, yielding them one token at a time.
+    """
+    with open(file) as f:
+        yield from read_stream_csv(f, sep)

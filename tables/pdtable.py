@@ -53,7 +53,7 @@ import pandas as pd
 import warnings
 from typing import List, Union, Set, Dict, Optional, Iterable
 import numpy  # for types only
-
+from pathlib import Path
 
 _TABLE_DATA_FIELD_NAME = '_table_data'
 
@@ -151,7 +151,7 @@ def unit_from_dtype(dtype: numpy.dtype) -> str:
 @dataclass
 class ColumnMetadata:
     """
-    Column metadata is always stored in dict with name as key
+    Column metadata is always stored in dic with name as key
     """
     unit: str
     display_unit: Optional[str] = None
@@ -373,7 +373,7 @@ def make_pdtable(
         raise Exception('Supply either metadata or keyword-arguments for TableMetadata constructor')
     if kwargs:
         # This is intended to fail if args are insufficient
-        metadata=TableMetadata(**kwargs)
+        metadata = TableMetadata(**kwargs)
 
     df = PandasTable.from_table_data(df, data=TableData(metadata=metadata))
 
@@ -486,6 +486,10 @@ class Column:
         """
         return self._values.array
 
+    @values.setter
+    def values(self, values):
+        self._values.update(pd.Series(values))
+
     def to_numpy(self):
         """
         Value of column as numpy array. May require coercion and/or copying.
@@ -557,18 +561,30 @@ class Table:
         """
         return self.table_data.columns
 
+
+    # TODO: Rename columns -> column_names
     @property
-    def columns(self) -> List[str]:
+    def column_names(self) -> List[str]:
         return self._df.columns.values.tolist()
+
+    @property
+    def column_proxies(self) -> List[Column]:
+        df = self._df
+        table_data = get_table_data(df)
+        return [Column(df, name, table_data=table_data) for name in self.column_names]
 
     @property
     def units(self) -> List[str]:
         cols = self.column_metadata
-        return [cols[name].unit for name in self.columns]
+        return [cols[name].unit for name in self.column_names]
 
     @property
     def name(self) -> str:
         return self.metadata.name
+
+    @property
+    def destinations(self) -> str:
+        return ", ".join(s for s in self.metadata.destinations)
 
     @units.setter
     def units(self, unit_values):
@@ -621,3 +637,4 @@ class Table:
 
     def __str__(self):
         return repr(self)
+

@@ -13,9 +13,7 @@ Examples include:
 
 from enum import Enum, auto
 from typing import Iterable, Tuple, Any, Iterator, Optional
-
-
-from . import pdtable
+from .pdtable import PandasTable
 
 
 class StarBlockType(Enum):
@@ -34,17 +32,24 @@ class StarBlockType(Enum):
     BLANK = auto()
 
 
-TableType = pdtable.PandasTable
+BlockGenerator = Iterable[Tuple[StarBlockType, Optional[Any]]]
+
+TableType = PandasTable
 
 
 class TableBundle:
     """
     Simple table store with no regard for destinations
 
-    Ignores everything but Table-tokens
+    Ignores everything but Table-tokens.
+    Both get_attr and get_item returns PandasTable instances.
+    These can be wrapped in pdtable.Table facades for access to metadata (units etc.)
+
+    For discoverability, it would be better to return Table facade objects directly,
+    but the current approach has the advantage of allowing normal dataframes.
     """
 
-    def __init__(self, ts: Iterable[Optional[Tuple[StarBlockType, Any]]]):
+    def __init__(self, ts: BlockGenerator):
         self._tables = {token.name: token.pdtable for token_type, token in ts
                         if token is not None and token_type == StarBlockType.TABLE}
 
@@ -57,3 +62,8 @@ class TableBundle:
     def __iter__(self) -> Iterator[str]:
         """Iterator over table names"""
         return iter(self._tables)
+
+    def __len__(self):
+        return self._tables.__len__()
+
+

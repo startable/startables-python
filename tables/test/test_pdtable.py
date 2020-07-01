@@ -83,7 +83,7 @@ def test_table(dft):
     assert pdtable.get_table_data(t.pdtable).columns['cola'].unit == 'km'
 
     t['colc'] = range(20, 24)
-    assert 'colc' in t.columns
+    assert 'colc' in t.column_names
     assert t['colc'].unit == '-'
 
 
