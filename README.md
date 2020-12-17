@@ -147,6 +147,13 @@ In a coming release, the following items are lined up to be...
 
 * {...crickets chirping...}
 
+
+### 0.8.5 - 2020-17-12
+
+#### Fixed
+
+* `pandas.read_excel()` is now called with `engine='openpyxl'` to ensure compalibility with `.xlsx` files
+
 ### 0.8.4 - 2019-12-05
 
 #### Fixed
