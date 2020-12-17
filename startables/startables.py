@@ -738,7 +738,7 @@ def _make_single_dataframe_from_excel_workbook(io) -> pd.DataFrame:
     """
     # Produce dictionary whose values are the data frames for each sheet
     dfs_by_sheet = pd.read_excel(io, sheet_name=None, header=None, na_values=[''],
-                                 keep_default_na=False)
+                                 keep_default_na=False, engine='openpyxl')
     # We need to append a blank row to each data frame since by specification, startables
     # are separated by empty lines
     for sheet_name, df in dfs_by_sheet.items():
