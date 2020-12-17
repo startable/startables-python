@@ -8,7 +8,7 @@ dependencies:
   - pandas
   - xlrd  # to support pandas.read_excel()
   - openpyxl
-  - docx
+  - python-docx
   # TEST
   - pytest
   - coverage
