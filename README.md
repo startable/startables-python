@@ -1,3 +1,5 @@
+# ❗⚠️❗ This project is deprecated. Please use [pdtable](https://github.com/startable/pdtable) instead ❗⚠️❗
+
 # startables for Python
 
 Python package with data structures and functionality to read/write files in StarTable format and contain and manipulate the information therein.
